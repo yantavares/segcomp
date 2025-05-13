@@ -6,8 +6,8 @@
  * 1. Cifrador/Decifrador de Vigenère
  * 2. Ataque de recuperação de senha por análise de frequência
  *
- * Autor: Claude
- * Data: 13/05/2025
+ * Autor: Yan Tavares
+ *
  */
 
 #include <stdio.h>
