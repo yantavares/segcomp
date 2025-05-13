@@ -87,7 +87,6 @@ void vigenere_encrypt(const char *plaintext, const char *key, char *ciphertext)
         // Preserva o caso original
         ciphertext[j++] = is_upper ? toupper(encrypted) : encrypted;
 
-        // Avança para o próximo caractere da chave
         key_index++;
     }
 
@@ -139,7 +138,6 @@ void vigenere_decrypt(const char *ciphertext, const char *key, char *plaintext)
         // Preserva o caso original
         plaintext[j++] = is_upper ? toupper(decrypted) : decrypted;
 
-        // Avança para o próximo caractere da chave
         key_index++;
     }
 
@@ -158,7 +156,6 @@ int count_frequencies(const char *text, int *freq)
     int i;
     int total = 0;
 
-    // Inicializa o array de frequências com zeros
     for (i = 0; i < ALPHABET_SIZE; i++)
     {
         freq[i] = 0;
@@ -478,7 +475,7 @@ void encrypt_menu()
         char filename[100];
         printf("Digite o nome do arquivo: ");
         fgets(filename, 100, stdin);
-        filename[strcspn(filename, "\n")] = '\0'; // Remove o '\n' final
+        filename[strcspn(filename, "\n")] = '\0';
 
         if (!read_file(filename, plaintext, MAX_TEXT_SIZE))
         {
@@ -493,9 +490,8 @@ void encrypt_menu()
 
     printf("Digite a chave: ");
     fgets(key, MAX_KEY_SIZE, stdin);
-    key[strcspn(key, "\n")] = '\0'; // Remove o '\n' final
+    key[strcspn(key, "\n")] = '\0';
 
-    // Verifica se a chave é válida
     if (strlen(key) == 0)
     {
         printf("A chave não pode ser vazia!\n");
@@ -507,7 +503,6 @@ void encrypt_menu()
 
     printf("\nTexto cifrado:\n%s\n", ciphertext);
 
-    // Pergunta se deseja salvar o texto cifrado
     printf("\nDeseja salvar o texto cifrado? (s/n): ");
     char save;
     scanf(" %c", &save);
@@ -548,14 +543,14 @@ void decrypt_menu()
     {
         printf("Digite o texto cifrado:\n");
         fgets(ciphertext, MAX_TEXT_SIZE, stdin);
-        ciphertext[strcspn(ciphertext, "\n")] = '\0'; // Remove o '\n' final
+        ciphertext[strcspn(ciphertext, "\n")] = '\0';
     }
     else if (choice == 2)
     {
         char filename[100];
         printf("Digite o nome do arquivo: ");
         fgets(filename, 100, stdin);
-        filename[strcspn(filename, "\n")] = '\0'; // Remove o '\n' final
+        filename[strcspn(filename, "\n")] = '\0';
 
         if (!read_file(filename, ciphertext, MAX_TEXT_SIZE))
         {
@@ -570,7 +565,7 @@ void decrypt_menu()
 
     printf("Digite a chave: ");
     fgets(key, MAX_KEY_SIZE, stdin);
-    key[strcspn(key, "\n")] = '\0'; // Remove o '\n' final
+    key[strcspn(key, "\n")] = '\0';
 
     // Verifica se a chave é válida
     if (strlen(key) == 0)
@@ -584,7 +579,6 @@ void decrypt_menu()
 
     printf("\nTexto decifrado:\n%s\n", plaintext);
 
-    // Pergunta se deseja salvar o texto decifrado
     printf("\nDeseja salvar o texto decifrado? (s/n): ");
     char save;
     scanf(" %c", &save);
@@ -622,20 +616,20 @@ void attack_menu()
     printf("2. Carregar o texto cifrado de um arquivo\n");
     printf("Opção: ");
     scanf("%d", &choice);
-    getchar(); // Consome o '\n'
+    getchar();
 
     if (choice == 1)
     {
         printf("Digite o texto cifrado:\n");
         fgets(ciphertext, MAX_TEXT_SIZE, stdin);
-        ciphertext[strcspn(ciphertext, "\n")] = '\0'; // Remove o '\n' final
+        ciphertext[strcspn(ciphertext, "\n")] = '\0';
     }
     else if (choice == 2)
     {
         char filename[100];
         printf("Digite o nome do arquivo: ");
         fgets(filename, 100, stdin);
-        filename[strcspn(filename, "\n")] = '\0'; // Remove o '\n' final
+        filename[strcspn(filename, "\n")] = '\0';
 
         if (!read_file(filename, ciphertext, MAX_TEXT_SIZE))
         {
@@ -662,7 +656,6 @@ void attack_menu()
 
     int is_portuguese = (language == 1);
 
-    // Limpa o texto (remove caracteres não alfabéticos)
     clean_text(ciphertext, cleaned_text);
 
     printf("\nIniciando análise do texto cifrado...\n");
@@ -703,7 +696,6 @@ void attack_menu()
     int key_length;
     if (key_option == 1)
     {
-        // Encontra o tamanho mais provável da chave
         key_length = find_key_length(cleaned_text, is_portuguese);
     }
     else if (key_option == 2)
@@ -737,7 +729,6 @@ void attack_menu()
     printf("Chave recuperada: \"%s\" (comprimento: %d)\n", key, key_length);
     printf("\nTexto decifrado:\n%s\n", plaintext);
 
-    // Pergunta se deseja salvar o texto decifrado e um relatório
     printf("\nDeseja salvar o texto decifrado? (s/n): ");
     char save;
     scanf(" %c", &save);
