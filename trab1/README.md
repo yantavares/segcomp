@@ -53,7 +53,7 @@ O ataque implementado segue estes passos:
 ### Compilação
 
 ```bash
-gcc -o vigenere vigenere.c -lm
+gcc -o vigenere main.c
 ```
 
 ### Uso
@@ -134,17 +134,6 @@ A LITERATURA BRASILEIRA É RICA EM DIVERSIDADE E HISTÓRIA.
 - Textos muito curtos ou com distribuições incomuns podem não ser decifrados corretamente
 - O tamanho máximo da chave para tentativa de recuperação é limitado a 20 por padrão
 
-## Extensões Possíveis
-
-- Implementar suporte a outros idiomas além de português e inglês
-- Incluir mais algoritmos de análise estatística para melhorar a precisão da recuperação de chave
-- Adicionar suporte a mais formatos de arquivo (incluindo suporte para arquivos binários)
-- Desenvolver uma interface gráfica para facilitar a utilização
-
 ## Autor
 
-Claude - 13/05/2025
-
-## Licença
-
-Este código é fornecido para fins educacionais e de aprendizado sobre criptografia clássica.
+Yan Tavares - 202014323
