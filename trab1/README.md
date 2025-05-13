@@ -124,8 +124,18 @@ Tamanho de chave mais provável: 10
 Chave recuperada: literatura
 
 Texto decifrado:
-A LITERATURA BRASILEIRA É RICA EM DIVERSIDADE E HISTÓRIA.
+A literatura brasileira é rica em diversidade e história.
 ```
+
+Arquivos para teste estão disponíveis na pasta `arquivos/`. Eles contêm textos que demonstram aspectos importantes da cifra de Vigenère:
+
+- `ptbr.txt`: Texto em português. O ataque funciona corretamente para a chave "literatura" automaticamente.
+
+- `ptbr2.txt`: Texto em português. O ataque funciona corretamente para a chave "teste", mas, por ser um texto pequeno, o resultado funciona se o tamanho da chave for fornecido.
+
+- `en.txt`: Texto em inglês. O ataque funciona corretamente para a chave "literatura" automaticamente.
+
+Importante ressaltar que, embora as chaves testadas sejam "literatura" e "teste", o ataque pode ser aplicado a qualquer texto cifrado, independentemente da chave utilizada.
 
 ## Limitações
 
