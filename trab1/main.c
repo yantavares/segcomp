@@ -614,6 +614,8 @@ void attack_menu()
     int choice, language;
 
     printf("\n===== ATAQUE DE RECUPERAÇÃO DE SENHA =====\n");
+    printf("Este módulo utiliza análise de frequência e Índice de Coincidência (IC)\n");
+    printf("para descobrir a chave usada na cifra de Vigenère sem conhecimento prévio.\n\n");
 
     printf("Escolha uma opção:\n");
     printf("1. Digitar o texto cifrado\n");
@@ -660,24 +662,82 @@ void attack_menu()
 
     int is_portuguese = (language == 1);
 
-    // Limpa o texto (opcional para análise de IC)
+    // Limpa o texto (remove caracteres não alfabéticos)
     clean_text(ciphertext, cleaned_text);
 
-    printf("\nAnalisando o texto cifrado (comprimento: %zu caracteres)...\n", strlen(cleaned_text));
+    printf("\nIniciando análise do texto cifrado...\n");
+    printf("Comprimento do texto cifrado: %zu caracteres\n", strlen(ciphertext));
+    printf("Comprimento do texto limpo (apenas letras): %zu caracteres\n", strlen(cleaned_text));
 
-    // Encontra o tamanho mais provável da chave
-    int key_length = find_key_length(cleaned_text, is_portuguese);
+    // Cálculo do IC global para confirmar que é uma cifra polialfabética
+    double global_ic = index_of_coincidence(cleaned_text);
+    printf("\nÍndice de Coincidência (IC) global do texto cifrado: %.5f\n", global_ic);
+    printf("IC esperado para texto em %s: %.5f\n",
+           is_portuguese ? "português" : "inglês",
+           is_portuguese ? 0.072 : 0.067);
+    printf("IC típico para texto aleatório: 0.03846 (1/26)\n");
+
+    if (global_ic > 0.065)
+    {
+        printf("\nAVISO: O IC global é alto, sugerindo que o texto pode não estar\n");
+        printf("cifrado ou pode estar usando uma cifra monoalfabética (não Vigenère).\n");
+    }
+    else if (global_ic < 0.04)
+    {
+        printf("\nConfirmado: O IC baixo indica uma cifra polialfabética (como Vigenère).\n");
+    }
+    else
+    {
+        printf("\nO IC sugere uma cifra polialfabética, mas outros fatores podem estar\n");
+        printf("influenciando o resultado (como tamanho do texto ou chave pequena).\n");
+    }
+
+    // Opção para forçar um tamanho de chave específico
+    printf("\nDeseja especificar um tamanho de chave ou usar análise automática?\n");
+    printf("1. Usar análise automática\n");
+    printf("2. Especificar tamanho de chave\n");
+    printf("Opção: ");
+    int key_option;
+    scanf("%d", &key_option);
+
+    int key_length;
+    if (key_option == 1)
+    {
+        // Encontra o tamanho mais provável da chave
+        key_length = find_key_length(cleaned_text, is_portuguese);
+    }
+    else if (key_option == 2)
+    {
+        printf("Digite o tamanho da chave a ser usado: ");
+        scanf("%d", &key_length);
+        if (key_length <= 0 || key_length > 100)
+        {
+            printf("Tamanho de chave inválido. Usando análise automática.\n");
+            key_length = find_key_length(cleaned_text, is_portuguese);
+        }
+        else
+        {
+            printf("Usando tamanho de chave especificado: %d\n", key_length);
+        }
+    }
+    else
+    {
+        printf("Opção inválida. Usando análise automática.\n");
+        key_length = find_key_length(cleaned_text, is_portuguese);
+    }
 
     // Recupera a chave
     recover_key(cleaned_text, key_length, is_portuguese, key);
-    printf("\nChave recuperada: %s\n", key);
+    printf("\nChave recuperada: \"%s\"\n", key);
 
     // Decifra o texto usando a chave recuperada
     vigenere_decrypt(ciphertext, key, plaintext);
 
+    printf("\n===== RESULTADO FINAL =====\n");
+    printf("Chave recuperada: \"%s\" (comprimento: %d)\n", key, key_length);
     printf("\nTexto decifrado:\n%s\n", plaintext);
 
-    // Pergunta se deseja salvar o texto decifrado
+    // Pergunta se deseja salvar o texto decifrado e um relatório
     printf("\nDeseja salvar o texto decifrado? (s/n): ");
     char save;
     scanf(" %c", &save);
@@ -690,7 +750,29 @@ void attack_menu()
 
         if (write_file(filename, plaintext))
         {
-            printf("Texto decifrado salvo com sucesso!\n");
+            printf("Texto decifrado salvo com sucesso em '%s'!\n", filename);
+        }
+
+        // Salva também um relatório com detalhes da análise
+        char report_filename[110];
+        snprintf(report_filename, sizeof(report_filename), "%s_relatorio.txt", filename);
+
+        FILE *report = fopen(report_filename, "w");
+        if (report)
+        {
+            fprintf(report, "RELATÓRIO DE ANÁLISE CRIPTOGRÁFICA\n");
+            fprintf(report, "===============================\n\n");
+            fprintf(report, "Data da análise: %s\n\n", __DATE__);
+            fprintf(report, "DETALHES DA ANÁLISE:\n");
+            fprintf(report, "- Idioma presumido: %s\n", is_portuguese ? "Português" : "Inglês");
+            fprintf(report, "- Comprimento do texto cifrado: %zu caracteres\n", strlen(ciphertext));
+            fprintf(report, "- Índice de Coincidência global: %.5f\n", global_ic);
+            fprintf(report, "- Tamanho de chave detectado: %d\n", key_length);
+            fprintf(report, "- Chave recuperada: \"%s\"\n\n", key);
+            fprintf(report, "TEXTO DECIFRADO:\n%s\n", plaintext);
+            fclose(report);
+
+            printf("Relatório de análise salvo em '%s'!\n", report_filename);
         }
     }
 }
