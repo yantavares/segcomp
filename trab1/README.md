@@ -53,7 +53,7 @@ O ataque implementado segue estes passos:
 ### Compilação
 
 ```bash
-gcc -o vigenere main.c
+gcc -o vigenere main.c -lm
 ```
 
 ### Uso
