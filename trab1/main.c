@@ -346,6 +346,46 @@ int find_likely_shift_chi_squared(const char *sequence, const double *expected_f
     return best_shift; // Este é o caractere da chave (0='a', 1='b', ...)
 }
 
+/**
+ * @brief Calcula o deslocamento mais provável para uma sequência
+ *
+ * Este método usa a correlação entre as frequências observadas e as frequências
+ * esperadas para determinar o deslocamento mais provável (letra da chave).
+ *
+ * @param sequence Sequência de texto
+ * @param expected_freqs Frequências esperadas para o idioma
+ * @return Deslocamento mais provável (0-25, correspondendo a 'a'-'z')
+ */
+ int find_likely_shift_simple(const char *sequence, const double *expected_freqs) {
+    int observed_counts[ALPHABET_SIZE];
+    int total_chars = count_frequencies(sequence, observed_counts);
+    double best_correlation = -1.0;
+    int best_shift = 0;
+    
+    if (total_chars == 0) {
+        return 0;
+    }
+    
+    for (int g = 0; g < ALPHABET_SIZE; g++) {
+        double correlation = 0.0;
+        
+        for (int i = 0; i < ALPHABET_SIZE; i++) {
+            // Frequência normalizada observada para letra i no texto decifrado
+            double observed_freq = (double)observed_counts[(i + g) % ALPHABET_SIZE] / total_chars;
+            
+            // Correlaciona diretamente com a frequência esperada
+            correlation += observed_freq * expected_freqs[i];
+        }
+        
+        if (correlation > best_correlation) {
+            best_correlation = correlation;
+            best_shift = g;
+        }
+    }
+    
+    return best_shift;
+}
+
 
 /**
  * @brief Tenta recuperar a chave usada para cifrar o texto
@@ -355,7 +395,7 @@ int find_likely_shift_chi_squared(const char *sequence, const double *expected_f
  * @param is_portuguese Flag indicando se o texto está em português (1) ou inglês (0)
  * @param key Buffer para armazenar a chave recuperada
  */
-void recover_key(const char *cleaned_ciphertext, int key_length, int is_portuguese, char *key)
+void recover_key(const char *cleaned_ciphertext, int key_length, int is_portuguese, char *key, int atackType)
 {
     char sequence[MAX_TEXT_SIZE];
     int i;
@@ -372,7 +412,9 @@ void recover_key(const char *cleaned_ciphertext, int key_length, int is_portugue
         }
         // Encontra o deslocamento mais provável para esta posição da chave
         // O 'shift' retornado por find_likely_shift_chi_squared é a letra da chave (0='a', 1='b', etc.)
-        int key_char_offset = find_likely_shift_chi_squared(sequence, expected_freqs);
+        int key_char_offset;
+        if (atackType == 1) key_char_offset = find_likely_shift_chi_squared(sequence, expected_freqs);
+        else key_char_offset = find_likely_shift_simple(sequence, expected_freqs);
         key[i] = 'a' + key_char_offset;
     }
 
@@ -750,10 +792,25 @@ void attack_menu()
     char recovered_key[MAX_KEY_SIZE];
     char plaintext_output[MAX_TEXT_SIZE]; 
     int choice, language_choice;
+    int attack_method;
 
     printf("\n===== ATAQUE DE RECUPERAÇÃO DE SENHA =====\n");
     printf("Este módulo utiliza análise de frequência e Índice de Coincidência (IC)\n");
     printf("para tentar descobrir a chave usada na cifra de Vigenère.\n\n");
+
+    // Decidir entre CHi quadrado ou correlação simples
+    printf("Escolha o método de ataque:\n");
+    printf("1. Método do Qui-Quadrado (indicado para textos longos)\n");
+    printf("2. Correlação Simples (indicado para textos curtos).\n");
+    
+    // tem que estar entre 1 e 2
+    printf("Opção: ");
+    if (scanf("%d", &attack_method) != 1) {
+        printf("Entrada inválida.\n");
+        while(getchar()!='\n');
+        return;
+    }
+    while(getchar()!='\n');
 
     printf("Escolha uma opção para fornecer o texto cifrado:\n");
     printf("1. Digitar o texto cifrado\n");
@@ -904,7 +961,7 @@ void attack_menu()
 
 
     // Recupera a chave
-    recover_key(cleaned_text, key_length_to_use, is_portuguese, recovered_key);
+    recover_key(cleaned_text, key_length_to_use, is_portuguese, recovered_key, attack_method);
     printf("\nChave recuperada (tentativa): \"%s\"\n", recovered_key);
 
     // Decifra o texto cifrado ORIGINAL (com pontuação, etc.) usando a chave recuperada
