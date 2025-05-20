@@ -144,6 +144,7 @@ Importante ressaltar que, embora as chaves testadas sejam "literatura" e "teste"
 - Textos muito curtos ou com distribuições incomuns podem não ser decifrados corretamente
 - O tamanho máximo da chave para tentativa de recuperação é limitado a 20 por padrão
 
-## Autor
+## Autores
 
 Yan Tavares - 202014323
+Eduardo Marques - 211021004
