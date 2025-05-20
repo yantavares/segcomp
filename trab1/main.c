@@ -1,5 +1,5 @@
 /**
- * @file vigenere.c
+ * @file main.c
  * @brief Implementação completa da cifra de Vigenère com ataque de análise de frequência
  *
  * Este programa implementa duas partes principais:
