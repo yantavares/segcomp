@@ -149,4 +149,5 @@ As versões já cifradas dos textos estão disponíveis na pasta `arquivos/cifra
 ## Autores
 
 Yan Tavares - 202014323
+
 Eduardo Marques - 211021004
