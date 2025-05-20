@@ -137,6 +137,8 @@ Arquivos para teste estão disponíveis na pasta `arquivos/`. Eles contêm texto
 
 Importante ressaltar que, embora as chaves testadas sejam "literatura" e "teste", o ataque pode ser aplicado a qualquer texto cifrado, independentemente da chave utilizada.
 
+As versões já cifradas dos textos estão disponíveis na pasta `arquivos/cifrados/` com as chaves citadas acima.
+
 ## Limitações
 
 - O ataque funciona melhor com textos longos (recomendado mais de 100 caracteres)
