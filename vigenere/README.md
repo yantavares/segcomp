@@ -146,6 +146,16 @@ As versões já cifradas dos textos estão disponíveis na pasta `arquivos/cifra
 - Textos muito curtos ou com distribuições incomuns podem não ser decifrados corretamente
 - O tamanho máximo da chave para tentativa de recuperação é limitado a 20 por padrão
 
+## Documentação
+
+O projeto inclui comentários detalhados no código-fonte para explicar a lógica de cada parte da implementação. A documentação pode ser compilada usando Doxygen, se desejado.
+
+```bash
+doxygen Doxyfile
+```
+
+Para visualizar a documentação gerada, abra o arquivo `index.html` na pasta `html/`.
+
 ## Autores
 
 Yan Tavares - 202014323
