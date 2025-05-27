@@ -1,0 +1,456 @@
+\doxysection{Referência ao ficheiro main.\+c}
+\hypertarget{main_8c}{}\label{main_8c}\index{main.c@{main.c}}
+
+
+Implementação completa da cifra de Vigenère com ataque de análise de frequência.  
+
+
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$ctype.\+h$>$}\newline
+{\ttfamily \#include $<$math.\+h$>$}\newline
+\doxysubsubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{main_8c_a18729f2eeae081f632853442b7d99f86}\label{main_8c_a18729f2eeae081f632853442b7d99f86} 
+\#define {\bfseries MAX\+\_\+\+TEXT\+\_\+\+SIZE}~10000
+\item 
+\Hypertarget{main_8c_a61504903c4144f98e49063d95c67dc60}\label{main_8c_a61504903c4144f98e49063d95c67dc60} 
+\#define {\bfseries MAX\+\_\+\+KEY\+\_\+\+SIZE}~100
+\item 
+\Hypertarget{main_8c_a6572f1706059832f94025fa12c6c45ed}\label{main_8c_a6572f1706059832f94025fa12c6c45ed} 
+\#define {\bfseries ALPHABET\+\_\+\+SIZE}~26
+\item 
+\Hypertarget{main_8c_aa2afd507fb0f49fead63c9c8924238c7}\label{main_8c_aa2afd507fb0f49fead63c9c8924238c7} 
+\#define {\bfseries MAX\+\_\+\+KEY\+\_\+\+LENGTH\+\_\+\+TO\+\_\+\+TRY}~20
+\item 
+\Hypertarget{main_8c_ac298ecd894fd5b51fe232845da36cd8b}\label{main_8c_ac298ecd894fd5b51fe232845da36cd8b} 
+\#define {\bfseries MIN\+\_\+\+IC\+\_\+\+DIFF}~0.\+001
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Funções}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{main_8c_aaa7001ff6b4ac0ddc106a7615376434d}{vigenere\+\_\+encrypt}} (const char \texorpdfstring{$\ast$}{*}plaintext, const char \texorpdfstring{$\ast$}{*}key, char \texorpdfstring{$\ast$}{*}ciphertext)
+\begin{DoxyCompactList}\small\item\em Cifra um texto usando a cifra de Vigenère. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8c_a339c097222da2e70b77c6bea54a62662}{vigenere\+\_\+decrypt}} (const char \texorpdfstring{$\ast$}{*}ciphertext, const char \texorpdfstring{$\ast$}{*}key, char \texorpdfstring{$\ast$}{*}plaintext)
+\begin{DoxyCompactList}\small\item\em Decifra um texto cifrado com a cifra de Vigenère. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{main_8c_ad141cce74a08fab2c322a62e19779d29}{count\+\_\+frequencies}} (const char \texorpdfstring{$\ast$}{*}text, int \texorpdfstring{$\ast$}{*}freq)
+\begin{DoxyCompactList}\small\item\em Conta a frequência de cada letra em um texto. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{main_8c_a30aa12c826a1237b9842e84414c2b889}{index\+\_\+of\+\_\+coincidence}} (const char \texorpdfstring{$\ast$}{*}text)
+\begin{DoxyCompactList}\small\item\em Calcula o Índice de Coincidência (IC) de um texto. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8c_adab5bbe3fd94bf4a030d3db3958f5df6}{extract\+\_\+sequence}} (const char \texorpdfstring{$\ast$}{*}text, int key\+\_\+length, int offset, char \texorpdfstring{$\ast$}{*}result)
+\begin{DoxyCompactList}\small\item\em Extrai uma subseção do texto a cada n posições. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{main_8c_aa7025003db7d0f59e42d37408db0184d}{average\+\_\+ic\+\_\+for\+\_\+key\+\_\+length}} (const char \texorpdfstring{$\ast$}{*}text, int key\+\_\+length)
+\begin{DoxyCompactList}\small\item\em Calcula o Índice de Coincidência médio para um determinado tamanho de chave. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{main_8c_abdb695c519defd45b80a8bcccac50bb0}{find\+\_\+likely\+\_\+shift\+\_\+chi\+\_\+squared}} (const char \texorpdfstring{$\ast$}{*}sequence, const double \texorpdfstring{$\ast$}{*}expected\+\_\+freqs)
+\begin{DoxyCompactList}\small\item\em Calcula o deslocamento mais provável para uma sequência (método do Qui-\/\+Quadrado) \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{main_8c_a1e7b530a7e2ad8a9731ee77d680abfd4}{find\+\_\+likely\+\_\+shift\+\_\+simple}} (const char \texorpdfstring{$\ast$}{*}sequence, const double \texorpdfstring{$\ast$}{*}expected\+\_\+freqs)
+\begin{DoxyCompactList}\small\item\em Calcula o deslocamento mais provável para uma sequência. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8c_aeacc6c44034e819c10bcf56a64473292}{recover\+\_\+key}} (const char \texorpdfstring{$\ast$}{*}cleaned\+\_\+ciphertext, int key\+\_\+length, int is\+\_\+portuguese, char \texorpdfstring{$\ast$}{*}key, int atack\+Type)
+\begin{DoxyCompactList}\small\item\em Tenta recuperar a chave usada para cifrar o texto. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{main_8c_aeb9dc03029c0b0882ba59956e9974dc4}{find\+\_\+key\+\_\+length}} (const char \texorpdfstring{$\ast$}{*}cleaned\+\_\+ciphertext, int is\+\_\+portuguese)
+\begin{DoxyCompactList}\small\item\em Determina o tamanho mais provável da chave. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{main_8c_a4c107d0816f5ec7f498da8159d441a26}{read\+\_\+file}} (const char \texorpdfstring{$\ast$}{*}filename, char \texorpdfstring{$\ast$}{*}buffer, int max\+\_\+size)
+\begin{DoxyCompactList}\small\item\em Lê um arquivo e carrega seu conteúdo para uma string. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{main_8c_a5a6d00f257ac7dab18c95ada0c960707}{write\+\_\+file}} (const char \texorpdfstring{$\ast$}{*}filename, const char \texorpdfstring{$\ast$}{*}content)
+\begin{DoxyCompactList}\small\item\em Escreve uma string para um arquivo. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8c_a83dbd4e0d0c97faa1cc65856f6a47546}{clean\+\_\+text\+\_\+to\+\_\+lower}} (const char \texorpdfstring{$\ast$}{*}text, char \texorpdfstring{$\ast$}{*}cleaned)
+\begin{DoxyCompactList}\small\item\em Remove caracteres não alfabéticos de uma string e converte para minúsculas. \end{DoxyCompactList}\item 
+\Hypertarget{main_8c_a19d0cddfe30f8567f8f87aeff3b7e987}\label{main_8c_a19d0cddfe30f8567f8f87aeff3b7e987} 
+void {\bfseries encrypt\+\_\+menu} ()
+\begin{DoxyCompactList}\small\item\em Menu para cifrar uma mensagem. \end{DoxyCompactList}\item 
+\Hypertarget{main_8c_a56731c9fbf087409c14e146cfcce82b7}\label{main_8c_a56731c9fbf087409c14e146cfcce82b7} 
+void {\bfseries decrypt\+\_\+menu} ()
+\begin{DoxyCompactList}\small\item\em Menu para decifrar uma mensagem. \end{DoxyCompactList}\item 
+\Hypertarget{main_8c_ae75210b7c671bedad1d0d69b60ce3b78}\label{main_8c_ae75210b7c671bedad1d0d69b60ce3b78} 
+void {\bfseries attack\+\_\+menu} ()
+\begin{DoxyCompactList}\small\item\em Menu para realizar o ataque de recuperação de senha. \end{DoxyCompactList}\item 
+\Hypertarget{main_8c_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{main_8c_ae66f6b31b5ad750f1fe042a706a4e3d4} 
+int {\bfseries main} ()
+\begin{DoxyCompactList}\small\item\em Função principal. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Variáveis}
+\begin{DoxyCompactItemize}
+\item 
+const double \mbox{\hyperlink{main_8c_a9ddb3bdb79c47d807c989684ba164081}{pt\+\_\+frequencies}} \mbox{[}ALPHABET\+\_\+\+SIZE\mbox{]}
+\begin{DoxyCompactList}\small\item\em Frequência das letras em português Fonte\+: \href{https://pt.wikipedia.org/wiki/Frequ\%C3\%AAncia_de_letras}{\texttt{ https\+://pt.\+wikipedia.\+org/wiki/\+Frequ\%\+C3\%\+AAncia\+\_\+de\+\_\+letras}}. \end{DoxyCompactList}\item 
+const double \mbox{\hyperlink{main_8c_ae928ad3a4d2873ee00ce417143cece2e}{en\+\_\+frequencies}} \mbox{[}ALPHABET\+\_\+\+SIZE\mbox{]}
+\begin{DoxyCompactList}\small\item\em Frequência das letras em inglês Fonte\+: \href{https://en.wikipedia.org/wiki/Letter_frequency}{\texttt{ https\+://en.\+wikipedia.\+org/wiki/\+Letter\+\_\+frequency}}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Descrição detalhada}
+Implementação completa da cifra de Vigenère com ataque de análise de frequência. 
+
+Este programa implementa duas partes principais\+:
+\begin{DoxyEnumerate}
+\item Cifrador/\+Decifrador de Vigenère
+\item Ataque de recuperação de senha por análise de frequência
+\end{DoxyEnumerate}
+
+Autor\+: Yan Tavares e Eduardo Marques 
+
+\doxysubsection{Documentação das funções}
+\Hypertarget{main_8c_aa7025003db7d0f59e42d37408db0184d}\index{main.c@{main.c}!average\_ic\_for\_key\_length@{average\_ic\_for\_key\_length}}
+\index{average\_ic\_for\_key\_length@{average\_ic\_for\_key\_length}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{average\_ic\_for\_key\_length()}{average\_ic\_for\_key\_length()}}
+{\footnotesize\ttfamily \label{main_8c_aa7025003db7d0f59e42d37408db0184d} 
+double average\+\_\+ic\+\_\+for\+\_\+key\+\_\+length (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{text}{, }\item[{int}]{key\+\_\+length}{}\end{DoxyParamCaption})}
+
+
+
+Calcula o Índice de Coincidência médio para um determinado tamanho de chave. 
+
+
+\begin{DoxyParams}{Parâmetros}
+{\em text} & Texto cifrado \\
+\hline
+{\em key\+\_\+length} & Tamanho da chave a testar \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Retorna}
+IC médio para o tamanho de chave dado 
+\end{DoxyReturn}
+\Hypertarget{main_8c_a83dbd4e0d0c97faa1cc65856f6a47546}\index{main.c@{main.c}!clean\_text\_to\_lower@{clean\_text\_to\_lower}}
+\index{clean\_text\_to\_lower@{clean\_text\_to\_lower}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{clean\_text\_to\_lower()}{clean\_text\_to\_lower()}}
+{\footnotesize\ttfamily \label{main_8c_a83dbd4e0d0c97faa1cc65856f6a47546} 
+void clean\+\_\+text\+\_\+to\+\_\+lower (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{text}{, }\item[{char \texorpdfstring{$\ast$}{*}}]{cleaned}{}\end{DoxyParamCaption})}
+
+
+
+Remove caracteres não alfabéticos de uma string e converte para minúsculas. 
+
+
+\begin{DoxyParams}{Parâmetros}
+{\em text} & Texto original \\
+\hline
+{\em cleaned} & Texto limpo (apenas alfabético e minúsculo) \\
+\hline
+\end{DoxyParams}
+\Hypertarget{main_8c_ad141cce74a08fab2c322a62e19779d29}\index{main.c@{main.c}!count\_frequencies@{count\_frequencies}}
+\index{count\_frequencies@{count\_frequencies}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{count\_frequencies()}{count\_frequencies()}}
+{\footnotesize\ttfamily \label{main_8c_ad141cce74a08fab2c322a62e19779d29} 
+int count\+\_\+frequencies (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{text}{, }\item[{int \texorpdfstring{$\ast$}{*}}]{freq}{}\end{DoxyParamCaption})}
+
+
+
+Conta a frequência de cada letra em um texto. 
+
+
+\begin{DoxyParams}{Parâmetros}
+{\em text} & Texto para analisar \\
+\hline
+{\em freq} & Array para armazenar as frequências (deve ter tamanho ALPHABET\+\_\+\+SIZE) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Retorna}
+Número total de letras contadas 
+\end{DoxyReturn}
+\Hypertarget{main_8c_adab5bbe3fd94bf4a030d3db3958f5df6}\index{main.c@{main.c}!extract\_sequence@{extract\_sequence}}
+\index{extract\_sequence@{extract\_sequence}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{extract\_sequence()}{extract\_sequence()}}
+{\footnotesize\ttfamily \label{main_8c_adab5bbe3fd94bf4a030d3db3958f5df6} 
+void extract\+\_\+sequence (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{text}{, }\item[{int}]{key\+\_\+length}{, }\item[{int}]{offset}{, }\item[{char \texorpdfstring{$\ast$}{*}}]{result}{}\end{DoxyParamCaption})}
+
+
+
+Extrai uma subseção do texto a cada n posições. 
+
+Esta função é usada no ataque de Vigenère para extrair todas as letras que foram cifradas com o mesmo caractere da chave (a cada key\+\_\+length posições).
+
+
+\begin{DoxyParams}{Parâmetros}
+{\em text} & Texto original \\
+\hline
+{\em key\+\_\+length} & Tamanho da chave \\
+\hline
+{\em offset} & Deslocamento a partir do início \\
+\hline
+{\em result} & Buffer para armazenar o resultado \\
+\hline
+\end{DoxyParams}
+\Hypertarget{main_8c_aeb9dc03029c0b0882ba59956e9974dc4}\index{main.c@{main.c}!find\_key\_length@{find\_key\_length}}
+\index{find\_key\_length@{find\_key\_length}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{find\_key\_length()}{find\_key\_length()}}
+{\footnotesize\ttfamily \label{main_8c_aeb9dc03029c0b0882ba59956e9974dc4} 
+int find\+\_\+key\+\_\+length (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{cleaned\+\_\+ciphertext}{, }\item[{int}]{is\+\_\+portuguese}{}\end{DoxyParamCaption})}
+
+
+
+Determina o tamanho mais provável da chave. 
+
+Este método usa o Índice de Coincidência para determinar o tamanho mais provável da chave. À medida que testamos diferentes comprimentos de chave, aquele que resultar em subsequências com IC mais próximo ao esperado para o idioma (±0,065-\/0,075) provavelmente é o correto.
+
+
+\begin{DoxyParams}{Parâmetros}
+{\em cleaned\+\_\+ciphertext} & Texto cifrado (já limpo, contendo apenas letras) \\
+\hline
+{\em is\+\_\+portuguese} & Flag indicando se o texto está em português (1) ou inglês (0) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Retorna}
+Tamanho mais provável da chave 
+\end{DoxyReturn}
+\Hypertarget{main_8c_abdb695c519defd45b80a8bcccac50bb0}\index{main.c@{main.c}!find\_likely\_shift\_chi\_squared@{find\_likely\_shift\_chi\_squared}}
+\index{find\_likely\_shift\_chi\_squared@{find\_likely\_shift\_chi\_squared}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{find\_likely\_shift\_chi\_squared()}{find\_likely\_shift\_chi\_squared()}}
+{\footnotesize\ttfamily \label{main_8c_abdb695c519defd45b80a8bcccac50bb0} 
+int find\+\_\+likely\+\_\+shift\+\_\+chi\+\_\+squared (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{sequence}{, }\item[{const double \texorpdfstring{$\ast$}{*}}]{expected\+\_\+freqs}{}\end{DoxyParamCaption})}
+
+
+
+Calcula o deslocamento mais provável para uma sequência (método do Qui-\/\+Quadrado) 
+
+Este método usa o teste do Qui-\/\+Quadrado para encontrar o deslocamento que minimiza a diferença entre as frequências observadas (deslocadas) e as frequências esperadas.
+
+Chi\texorpdfstring{$^\wedge$}{\string^}2 = Σ ((Observada\+\_\+i -\/ Esperada\+\_\+i)\texorpdfstring{$^\wedge$}{\string^}2 / Esperada\+\_\+i)
+
+
+\begin{DoxyParams}{Parâmetros}
+{\em sequence} & Sequência de texto \\
+\hline
+{\em expected\+\_\+freqs} & Frequências esperadas para o idioma \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Retorna}
+Deslocamento mais provável (0-\/25, correspondendo a \textquotesingle{}a\textquotesingle{}-\/\textquotesingle{}z\textquotesingle{}) 
+\end{DoxyReturn}
+\Hypertarget{main_8c_a1e7b530a7e2ad8a9731ee77d680abfd4}\index{main.c@{main.c}!find\_likely\_shift\_simple@{find\_likely\_shift\_simple}}
+\index{find\_likely\_shift\_simple@{find\_likely\_shift\_simple}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{find\_likely\_shift\_simple()}{find\_likely\_shift\_simple()}}
+{\footnotesize\ttfamily \label{main_8c_a1e7b530a7e2ad8a9731ee77d680abfd4} 
+int find\+\_\+likely\+\_\+shift\+\_\+simple (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{sequence}{, }\item[{const double \texorpdfstring{$\ast$}{*}}]{expected\+\_\+freqs}{}\end{DoxyParamCaption})}
+
+
+
+Calcula o deslocamento mais provável para uma sequência. 
+
+Este método usa a correlação entre as frequências observadas e as frequências esperadas para determinar o deslocamento mais provável (letra da chave).
+
+
+\begin{DoxyParams}{Parâmetros}
+{\em sequence} & Sequência de texto \\
+\hline
+{\em expected\+\_\+freqs} & Frequências esperadas para o idioma \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Retorna}
+Deslocamento mais provável (0-\/25, correspondendo a \textquotesingle{}a\textquotesingle{}-\/\textquotesingle{}z\textquotesingle{}) 
+\end{DoxyReturn}
+\Hypertarget{main_8c_a30aa12c826a1237b9842e84414c2b889}\index{main.c@{main.c}!index\_of\_coincidence@{index\_of\_coincidence}}
+\index{index\_of\_coincidence@{index\_of\_coincidence}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{index\_of\_coincidence()}{index\_of\_coincidence()}}
+{\footnotesize\ttfamily \label{main_8c_a30aa12c826a1237b9842e84414c2b889} 
+double index\+\_\+of\+\_\+coincidence (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{text}{}\end{DoxyParamCaption})}
+
+
+
+Calcula o Índice de Coincidência (IC) de um texto. 
+
+O Índice de Coincidência é a probabilidade de duas letras selecionadas aleatoriamente em um texto serem iguais. É uma medida útil para determinar se um texto foi cifrado com uma cifra polialfabética (como Vigenère) ou monoalfabética.
+
+Fórmula\+: IC = Σ(fi \texorpdfstring{$\ast$}{*} (fi -\/ 1)) / (N \texorpdfstring{$\ast$}{*} (N -\/ 1)) Onde\+:
+\begin{DoxyItemize}
+\item fi é a frequência de cada letra
+\item N é o número total de letras
+\end{DoxyItemize}
+
+Para textos em inglês, o IC teórico (sum f\+\_\+i\texorpdfstring{$^\wedge$}{\string^}2) é aproximadamente 0.\+0667 Para textos em português, o IC teórico (sum f\+\_\+i\texorpdfstring{$^\wedge$}{\string^}2) é aproximadamente 0.\+0761 (baseado nas frequências usadas) Para textos totalmente aleatórios, o IC é aproximadamente 0,038 (1/26)
+
+
+\begin{DoxyParams}{Parâmetros}
+{\em text} & Texto para calcular o IC \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Retorna}
+Índice de Coincidência 
+\end{DoxyReturn}
+\Hypertarget{main_8c_a4c107d0816f5ec7f498da8159d441a26}\index{main.c@{main.c}!read\_file@{read\_file}}
+\index{read\_file@{read\_file}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{read\_file()}{read\_file()}}
+{\footnotesize\ttfamily \label{main_8c_a4c107d0816f5ec7f498da8159d441a26} 
+int read\+\_\+file (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{filename}{, }\item[{char \texorpdfstring{$\ast$}{*}}]{buffer}{, }\item[{int}]{max\+\_\+size}{}\end{DoxyParamCaption})}
+
+
+
+Lê um arquivo e carrega seu conteúdo para uma string. 
+
+
+\begin{DoxyParams}{Parâmetros}
+{\em filename} & Nome do arquivo \\
+\hline
+{\em buffer} & Buffer para armazenar o conteúdo \\
+\hline
+{\em max\+\_\+size} & Tamanho máximo do buffer \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Retorna}
+1 se bem-\/sucedido, 0 caso contrário 
+\end{DoxyReturn}
+\Hypertarget{main_8c_aeacc6c44034e819c10bcf56a64473292}\index{main.c@{main.c}!recover\_key@{recover\_key}}
+\index{recover\_key@{recover\_key}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{recover\_key()}{recover\_key()}}
+{\footnotesize\ttfamily \label{main_8c_aeacc6c44034e819c10bcf56a64473292} 
+void recover\+\_\+key (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{cleaned\+\_\+ciphertext}{, }\item[{int}]{key\+\_\+length}{, }\item[{int}]{is\+\_\+portuguese}{, }\item[{char \texorpdfstring{$\ast$}{*}}]{key}{, }\item[{int}]{atack\+Type}{}\end{DoxyParamCaption})}
+
+
+
+Tenta recuperar a chave usada para cifrar o texto. 
+
+
+\begin{DoxyParams}{Parâmetros}
+{\em cleaned\+\_\+ciphertext} & Texto cifrado (já limpo, contendo apenas letras) \\
+\hline
+{\em key\+\_\+length} & Tamanho da chave \\
+\hline
+{\em is\+\_\+portuguese} & Flag indicando se o texto está em português (1) ou inglês (0) \\
+\hline
+{\em key} & Buffer para armazenar a chave recuperada \\
+\hline
+\end{DoxyParams}
+\Hypertarget{main_8c_a339c097222da2e70b77c6bea54a62662}\index{main.c@{main.c}!vigenere\_decrypt@{vigenere\_decrypt}}
+\index{vigenere\_decrypt@{vigenere\_decrypt}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{vigenere\_decrypt()}{vigenere\_decrypt()}}
+{\footnotesize\ttfamily \label{main_8c_a339c097222da2e70b77c6bea54a62662} 
+void vigenere\+\_\+decrypt (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{ciphertext}{, }\item[{const char \texorpdfstring{$\ast$}{*}}]{key}{, }\item[{char \texorpdfstring{$\ast$}{*}}]{plaintext}{}\end{DoxyParamCaption})}
+
+
+
+Decifra um texto cifrado com a cifra de Vigenère. 
+
+A decifração é o processo inverso da cifração.
+
+Fórmula\+: Pi = (Ci -\/ Ki + 26) mod 26 Onde\+:
+\begin{DoxyItemize}
+\item Pi é a letra original (plaintext)
+\item Ci é a letra cifrada
+\item Ki é a letra da chave
+\end{DoxyItemize}
+
+
+\begin{DoxyParams}{Parâmetros}
+{\em ciphertext} & Texto cifrado a ser decifrado \\
+\hline
+{\em key} & Chave para decifração \\
+\hline
+{\em plaintext} & Buffer para armazenar o texto decifrado \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Retorna}
+Nada, o resultado é colocado no buffer plaintext 
+\end{DoxyReturn}
+\Hypertarget{main_8c_aaa7001ff6b4ac0ddc106a7615376434d}\index{main.c@{main.c}!vigenere\_encrypt@{vigenere\_encrypt}}
+\index{vigenere\_encrypt@{vigenere\_encrypt}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{vigenere\_encrypt()}{vigenere\_encrypt()}}
+{\footnotesize\ttfamily \label{main_8c_aaa7001ff6b4ac0ddc106a7615376434d} 
+void vigenere\+\_\+encrypt (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{plaintext}{, }\item[{const char \texorpdfstring{$\ast$}{*}}]{key}{, }\item[{char \texorpdfstring{$\ast$}{*}}]{ciphertext}{}\end{DoxyParamCaption})}
+
+
+
+Cifra um texto usando a cifra de Vigenère. 
+
+A cifra de Vigenère é uma técnica de criptografia polialfabética que usa uma série de cifras de César baseadas nas letras de uma palavra-\/chave. Para cada letra do texto, usa-\/se a letra correspondente da chave para determinar o deslocamento.
+
+Fórmula\+: Ci = (Pi + Ki) mod 26 Onde\+:
+\begin{DoxyItemize}
+\item Ci é a letra cifrada
+\item Pi é a letra original (plaintext)
+\item Ki é a letra da chave
+\end{DoxyItemize}
+
+
+\begin{DoxyParams}{Parâmetros}
+{\em plaintext} & Texto a ser cifrado \\
+\hline
+{\em key} & Chave para cifração \\
+\hline
+{\em ciphertext} & Buffer para armazenar o texto cifrado \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Retorna}
+Nada, o resultado é colocado no buffer ciphertext 
+\end{DoxyReturn}
+\Hypertarget{main_8c_a5a6d00f257ac7dab18c95ada0c960707}\index{main.c@{main.c}!write\_file@{write\_file}}
+\index{write\_file@{write\_file}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{write\_file()}{write\_file()}}
+{\footnotesize\ttfamily \label{main_8c_a5a6d00f257ac7dab18c95ada0c960707} 
+int write\+\_\+file (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{filename}{, }\item[{const char \texorpdfstring{$\ast$}{*}}]{content}{}\end{DoxyParamCaption})}
+
+
+
+Escreve uma string para um arquivo. 
+
+
+\begin{DoxyParams}{Parâmetros}
+{\em filename} & Nome do arquivo \\
+\hline
+{\em content} & Conteúdo a ser escrito \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Retorna}
+1 se bem-\/sucedido, 0 caso contrário 
+\end{DoxyReturn}
+
+
+\doxysubsection{Documentação das variáveis}
+\Hypertarget{main_8c_ae928ad3a4d2873ee00ce417143cece2e}\index{main.c@{main.c}!en\_frequencies@{en\_frequencies}}
+\index{en\_frequencies@{en\_frequencies}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{en\_frequencies}{en\_frequencies}}
+{\footnotesize\ttfamily \label{main_8c_ae928ad3a4d2873ee00ce417143cece2e} 
+const double en\+\_\+frequencies\mbox{[}ALPHABET\+\_\+\+SIZE\mbox{]}}
+
+{\bfseries Valor inicial\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{=\ \{}
+\DoxyCodeLine{\ \ \ \ 0.0817,\ 0.0149,\ 0.0278,\ 0.0425,\ 0.1270,\ 0.0223,\ 0.0202,\ 0.0609,\ 0.0697,}
+\DoxyCodeLine{\ \ \ \ 0.0015,\ 0.0077,\ 0.0402,\ 0.0241,\ 0.0675,\ 0.0751,\ 0.0193,\ 0.0009,\ 0.0599,}
+\DoxyCodeLine{\ \ \ \ 0.0633,\ 0.0906,\ 0.0276,\ 0.0098,\ 0.0236,\ 0.0015,\ 0.0197,\ 0.0007\}}
+
+\end{DoxyCode}
+
+
+Frequência das letras em inglês Fonte\+: \href{https://en.wikipedia.org/wiki/Letter_frequency}{\texttt{ https\+://en.\+wikipedia.\+org/wiki/\+Letter\+\_\+frequency}}. 
+
+\Hypertarget{main_8c_a9ddb3bdb79c47d807c989684ba164081}\index{main.c@{main.c}!pt\_frequencies@{pt\_frequencies}}
+\index{pt\_frequencies@{pt\_frequencies}!main.c@{main.c}}
+\doxysubsubsection{\texorpdfstring{pt\_frequencies}{pt\_frequencies}}
+{\footnotesize\ttfamily \label{main_8c_a9ddb3bdb79c47d807c989684ba164081} 
+const double pt\+\_\+frequencies\mbox{[}ALPHABET\+\_\+\+SIZE\mbox{]}}
+
+{\bfseries Valor inicial\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{=\ \{}
+\DoxyCodeLine{\ \ \ \ 0.1463,\ }
+\DoxyCodeLine{\ \ \ \ 0.0104,\ }
+\DoxyCodeLine{\ \ \ \ 0.0388,\ }
+\DoxyCodeLine{\ \ \ \ 0.0499,\ }
+\DoxyCodeLine{\ \ \ \ 0.1257,\ }
+\DoxyCodeLine{\ \ \ \ 0.0102,\ }
+\DoxyCodeLine{\ \ \ \ 0.0130,\ }
+\DoxyCodeLine{\ \ \ \ 0.0128,\ }
+\DoxyCodeLine{\ \ \ \ 0.0618,\ }
+\DoxyCodeLine{\ \ \ \ 0.0040,\ }
+\DoxyCodeLine{\ \ \ \ 0.0002,\ }
+\DoxyCodeLine{\ \ \ \ 0.0278,\ }
+\DoxyCodeLine{\ \ \ \ 0.0474,\ }
+\DoxyCodeLine{\ \ \ \ 0.0505,\ }
+\DoxyCodeLine{\ \ \ \ 0.1073,\ }
+\DoxyCodeLine{\ \ \ \ 0.0252,\ }
+\DoxyCodeLine{\ \ \ \ 0.0120,\ }
+\DoxyCodeLine{\ \ \ \ 0.0653,\ }
+\DoxyCodeLine{\ \ \ \ 0.0781,\ }
+\DoxyCodeLine{\ \ \ \ 0.0434,\ }
+\DoxyCodeLine{\ \ \ \ 0.0463,\ }
+\DoxyCodeLine{\ \ \ \ 0.0167,\ }
+\DoxyCodeLine{\ \ \ \ 0.0001,\ }
+\DoxyCodeLine{\ \ \ \ 0.0021,\ }
+\DoxyCodeLine{\ \ \ \ 0.0001,\ }
+\DoxyCodeLine{\ \ \ \ 0.0047\ \ }
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Frequência das letras em português Fonte\+: \href{https://pt.wikipedia.org/wiki/Frequ\%C3\%AAncia_de_letras}{\texttt{ https\+://pt.\+wikipedia.\+org/wiki/\+Frequ\%\+C3\%\+AAncia\+\_\+de\+\_\+letras}}. 
+
