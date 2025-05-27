@@ -211,8 +211,8 @@ int count_frequencies(const char *text, int *freq)
  * - fi é a frequência de cada letra
  * - N é o número total de letras
  *
-* Para textos em inglês, o IC teórico (sum f_i^2) é aproximadamente 0.0667
-* Para textos em português, o IC teórico (sum f_i^2) é aproximadamente 0.0761 (baseado nas frequências usadas)
+ * Para textos em inglês, o IC teórico (sum f_i^2) é aproximadamente 0.0667
+ * Para textos em português, o IC teórico (sum f_i^2) é aproximadamente 0.0761 (baseado nas frequências usadas)
  * Para textos totalmente aleatórios, o IC é aproximadamente 0,038 (1/26)
  *
  * @param text Texto para calcular o IC
@@ -279,12 +279,14 @@ double average_ic_for_key_length(const char *text, int key_length)
     char sequence[MAX_TEXT_SIZE];
     int i;
 
-    if (key_length <= 0) return 0.0; // Evitar divisão por zero ou comportamento indefinido
+    if (key_length <= 0)
+        return 0.0; // Evitar divisão por zero ou comportamento indefinido
 
     for (i = 0; i < key_length; i++)
     {
         extract_sequence(text, key_length, i, sequence);
-        if (strlen(sequence) > 1) { // IC só faz sentido para sequências com mais de uma letra
+        if (strlen(sequence) > 1)
+        { // IC só faz sentido para sequências com mais de uma letra
             sum_ic += index_of_coincidence(sequence);
         }
     }
@@ -304,41 +306,50 @@ double average_ic_for_key_length(const char *text, int key_length)
  * @param expected_freqs Frequências esperadas para o idioma
  * @return Deslocamento mais provável (0-25, correspondendo a 'a'-'z')
  */
-int find_likely_shift_chi_squared(const char *sequence, const double *expected_freqs) {
+int find_likely_shift_chi_squared(const char *sequence, const double *expected_freqs)
+{
     int observed_counts[ALPHABET_SIZE];
     int total_chars = count_frequencies(sequence, observed_counts);
     double min_chi_squared = -1.0;
     int best_shift = 0;
     int g; // g = shift (representa a letra da chave: 0 para 'a', 1 para 'b', etc.)
 
-    if (total_chars == 0) {
+    if (total_chars == 0)
+    {
         return 0; // Retorna 'a' como palpite se a sequência for vazia
     }
 
-    for (g = 0; g < ALPHABET_SIZE; g++) { // Tenta cada possível letra da chave (0 a 25)
+    for (g = 0; g < ALPHABET_SIZE; g++)
+    { // Tenta cada possível letra da chave (0 a 25)
         double current_chi_squared = 0.0;
         int i; // Representa a letra do alfabeto (0 para 'a', 1 para 'b', etc.)
-        for (i = 0; i < ALPHABET_SIZE; i++) {
+        for (i = 0; i < ALPHABET_SIZE; i++)
+        {
             // Frequência observada da letra 'i' no texto decifrado com a chave 'g'
             // Se a letra no texto cifrado é 'c', e a chave é 'g', a letra decifrada é (c-g) mod 26.
             // Então, a contagem observada para a letra 'i' do texto plano é a contagem da letra (i+g)%26 no texto cifrado.
             double observed_count_for_plaintext_letter_i = (double)observed_counts[(i + g) % ALPHABET_SIZE];
-            
+
             // Contagem esperada da letra 'i' no idioma
             double expected_count_for_plaintext_letter_i = expected_freqs[i] * total_chars;
 
-            if (expected_count_for_plaintext_letter_i == 0) { 
+            if (expected_count_for_plaintext_letter_i == 0)
+            {
                 // Se a frequência esperada é 0, e a observada também é 0, não adiciona ao chi-quadrado.
                 // Se a observada não é 0, adiciona um valor alto para penalizar.
-                if (observed_count_for_plaintext_letter_i > 0) {
+                if (observed_count_for_plaintext_letter_i > 0)
+                {
                     current_chi_squared += 1000; // Penalidade alta (arbitrária)
                 }
-            } else {
+            }
+            else
+            {
                 current_chi_squared += pow(observed_count_for_plaintext_letter_i - expected_count_for_plaintext_letter_i, 2) / expected_count_for_plaintext_letter_i;
             }
         }
 
-        if (min_chi_squared < 0 || current_chi_squared < min_chi_squared) {
+        if (min_chi_squared < 0 || current_chi_squared < min_chi_squared)
+        {
             min_chi_squared = current_chi_squared;
             best_shift = g; // 'g' é a letra da chave que minimiza o Qui-Quadrado
         }
@@ -356,36 +367,40 @@ int find_likely_shift_chi_squared(const char *sequence, const double *expected_f
  * @param expected_freqs Frequências esperadas para o idioma
  * @return Deslocamento mais provável (0-25, correspondendo a 'a'-'z')
  */
- int find_likely_shift_simple(const char *sequence, const double *expected_freqs) {
+int find_likely_shift_simple(const char *sequence, const double *expected_freqs)
+{
     int observed_counts[ALPHABET_SIZE];
     int total_chars = count_frequencies(sequence, observed_counts);
     double best_correlation = -1.0;
     int best_shift = 0;
-    
-    if (total_chars == 0) {
+
+    if (total_chars == 0)
+    {
         return 0;
     }
-    
-    for (int g = 0; g < ALPHABET_SIZE; g++) {
+
+    for (int g = 0; g < ALPHABET_SIZE; g++)
+    {
         double correlation = 0.0;
-        
-        for (int i = 0; i < ALPHABET_SIZE; i++) {
+
+        for (int i = 0; i < ALPHABET_SIZE; i++)
+        {
             // Frequência normalizada observada para letra i no texto decifrado
             double observed_freq = (double)observed_counts[(i + g) % ALPHABET_SIZE] / total_chars;
-            
+
             // Correlaciona diretamente com a frequência esperada
             correlation += observed_freq * expected_freqs[i];
         }
-        
-        if (correlation > best_correlation) {
+
+        if (correlation > best_correlation)
+        {
             best_correlation = correlation;
             best_shift = g;
         }
     }
-    
+
     return best_shift;
 }
-
 
 /**
  * @brief Tenta recuperar a chave usada para cifrar o texto
@@ -406,15 +421,18 @@ void recover_key(const char *cleaned_ciphertext, int key_length, int is_portugue
     {
         extract_sequence(cleaned_ciphertext, key_length, i, sequence);
 
-        if (strlen(sequence) == 0) { // Se a subsequência for vazia
+        if (strlen(sequence) == 0)
+        {                 // Se a subsequência for vazia
             key[i] = 'a'; // Assume 'a' ou poderia ser outra heurística
             continue;
         }
         // Encontra o deslocamento mais provável para esta posição da chave
         // O 'shift' retornado por find_likely_shift_chi_squared é a letra da chave (0='a', 1='b', etc.)
         int key_char_offset;
-        if (atackType == 1) key_char_offset = find_likely_shift_chi_squared(sequence, expected_freqs);
-        else key_char_offset = find_likely_shift_simple(sequence, expected_freqs);
+        if (atackType == 1)
+            key_char_offset = find_likely_shift_chi_squared(sequence, expected_freqs);
+        else
+            key_char_offset = find_likely_shift_simple(sequence, expected_freqs);
         key[i] = 'a' + key_char_offset;
     }
 
@@ -436,9 +454,9 @@ int find_key_length(const char *cleaned_ciphertext, int is_portuguese)
 {
     // IC teórico (sum f_i^2) para português: ~0.0761
     // IC teórico (sum f_i^2) para inglês: ~0.0667
-    double target_ic = is_portuguese ? 0.0761384 : 0.066699; 
-                                                    
-    double best_avg_ic = 0.0; 
+    double target_ic = is_portuguese ? 0.0761384 : 0.066699;
+
+    double best_avg_ic = 0.0;
     int best_length = 1;
     int i;
 
@@ -449,8 +467,10 @@ int find_key_length(const char *cleaned_ciphertext, int is_portuguese)
     // Testa comprimentos de chave de 1 a MAX_KEY_LENGTH_TO_TRY
     for (i = 1; i <= MAX_KEY_LENGTH_TO_TRY; i++)
     {
-        if (strlen(cleaned_ciphertext) < i * 2 && i > 1 && i != 0) { 
-            if (strlen(cleaned_ciphertext) / i < 2 ) { // Se cada subsequência tiver menos de 2 caracteres
+        if (strlen(cleaned_ciphertext) < i * 2 && i > 1 && i != 0)
+        {
+            if (strlen(cleaned_ciphertext) / i < 2)
+            { // Se cada subsequência tiver menos de 2 caracteres
                 // printf("%-11d | (texto muito curto para subsequências significativas com este tamanho de chave)\n", i);
                 continue;
             }
@@ -458,30 +478,35 @@ int find_key_length(const char *cleaned_ciphertext, int is_portuguese)
         double avg_ic = average_ic_for_key_length(cleaned_ciphertext, i);
         printf("%-11d | %.5f\n", i, avg_ic);
 
-        if (i == 1) { 
+        if (i == 1)
+        {
             best_avg_ic = avg_ic;
             best_length = 1;
-        } else {
+        }
+        else
+        {
             // Prioriza o IC que está mais próximo do IC alvo do idioma.
             // MIN_IC_DIFF ajuda a preferir comprimentos menores se a melhoria na diferença for marginal.
-            if (fabs(avg_ic - target_ic) < fabs(best_avg_ic - target_ic) - MIN_IC_DIFF) {
+            if (fabs(avg_ic - target_ic) < fabs(best_avg_ic - target_ic) - MIN_IC_DIFF)
+            {
                 best_avg_ic = avg_ic;
                 best_length = i;
-            } 
+            }
             // Se a diferença para o alvo for muito similar, mas o IC atual for maior (e ainda razoável)
             // Isso pode ajudar a desempatar casos onde um IC um pouco menor está numericamente mais perto do alvo
             // mas um IC maior (e ainda próximo) é mais indicativo de um texto não aleatório.
-            else if (fabs(avg_ic - target_ic) < fabs(best_avg_ic - target_ic) + MIN_IC_DIFF/2 && avg_ic > best_avg_ic + MIN_IC_DIFF ) {
+            else if (fabs(avg_ic - target_ic) < fabs(best_avg_ic - target_ic) + MIN_IC_DIFF / 2 && avg_ic > best_avg_ic + MIN_IC_DIFF)
+            {
                 best_avg_ic = avg_ic;
                 best_length = i;
             }
         }
     }
-    
-    if (best_avg_ic < 0.045 && best_length > 1 && strlen(cleaned_ciphertext) > 50) { // 0.038 é aleatório
+
+    if (best_avg_ic < 0.045 && best_length > 1 && strlen(cleaned_ciphertext) > 50)
+    { // 0.038 é aleatório
         printf("AVISO: O melhor IC médio (%.5f para tamanho %d) ainda é baixo. A determinação do tamanho da chave pode ser imprecisa.\n", best_avg_ic, best_length);
     }
-
 
     printf("\nTamanho de chave mais provável: %d (com IC médio: %.5f, IC alvo do idioma: %.5f)\n", best_length, best_avg_ic, target_ic);
     return best_length;
@@ -505,7 +530,8 @@ int read_file(const char *filename, char *buffer, int max_size)
     }
 
     size_t bytes_read = fread(buffer, 1, max_size - 1, file);
-    if (ferror(file)) {
+    if (ferror(file))
+    {
         printf("Erro ao ler o arquivo %s\n", filename);
         fclose(file);
         return 0;
@@ -532,7 +558,8 @@ int write_file(const char *filename, const char *content)
         return 0;
     }
 
-    if (fputs(content, file) == EOF) {
+    if (fputs(content, file) == EOF)
+    {
         printf("Erro ao escrever no arquivo %s\n", filename);
         fclose(file);
         return 0;
@@ -578,17 +605,21 @@ void encrypt_menu()
     printf("1. Digitar o texto a ser cifrado\n");
     printf("2. Carregar o texto de um arquivo\n");
     printf("Opção: ");
-    if (scanf("%d", &choice) != 1) {
+    if (scanf("%d", &choice) != 1)
+    {
         printf("Entrada inválida.\n");
-        while(getchar()!='\n'); // Limpa buffer de entrada
+        while (getchar() != '\n')
+            ; // Limpa buffer de entrada
         return;
     }
-    while(getchar()!='\n'); // Consome o '\n'
+    while (getchar() != '\n')
+        ; // Consome o '\n'
 
     if (choice == 1)
     {
-        printf("Digite o texto a ser cifrado (max %d caracteres):\n", MAX_TEXT_SIZE -1);
-        if (fgets(plaintext, MAX_TEXT_SIZE, stdin) == NULL) {
+        printf("Digite o texto a ser cifrado (max %d caracteres):\n", MAX_TEXT_SIZE - 1);
+        if (fgets(plaintext, MAX_TEXT_SIZE, stdin) == NULL)
+        {
             printf("Erro ao ler texto.\n");
             return;
         }
@@ -598,7 +629,8 @@ void encrypt_menu()
     {
         char filename[100];
         printf("Digite o nome do arquivo: ");
-        if (fgets(filename, 100, stdin) == NULL) {
+        if (fgets(filename, 100, stdin) == NULL)
+        {
             printf("Erro ao ler nome do arquivo.\n");
             return;
         }
@@ -616,8 +648,9 @@ void encrypt_menu()
         return;
     }
 
-    printf("Digite a chave (apenas letras, sem espaços, max %d caracteres): ", MAX_KEY_SIZE -1);
-    if (fgets(key, MAX_KEY_SIZE, stdin) == NULL) {
+    printf("Digite a chave (apenas letras, sem espaços, max %d caracteres): ", MAX_KEY_SIZE - 1);
+    if (fgets(key, MAX_KEY_SIZE, stdin) == NULL)
+    {
         printf("Erro ao ler chave.\n");
         return;
     }
@@ -625,18 +658,24 @@ void encrypt_menu()
 
     // Validação da chave (apenas letras)
     int key_is_valid = 1;
-    if (strlen(key) == 0) {
+    if (strlen(key) == 0)
+    {
         key_is_valid = 0;
-    } else {
-        for (int k_idx = 0; key[k_idx] != '\0'; k_idx++) {
-            if (!isalpha(key[k_idx])) {
+    }
+    else
+    {
+        for (int k_idx = 0; key[k_idx] != '\0'; k_idx++)
+        {
+            if (!isalpha(key[k_idx]))
+            {
                 key_is_valid = 0;
                 break;
             }
         }
     }
 
-    if (!key_is_valid) {
+    if (!key_is_valid)
+    {
         printf("Chave inválida! Use apenas letras e não deixe a chave vazia.\n");
         return;
     }
@@ -648,18 +687,22 @@ void encrypt_menu()
 
     printf("\nDeseja salvar o texto cifrado? (s/n): ");
     char save_choice_char;
-    if (scanf(" %c", &save_choice_char) != 1) { 
+    if (scanf(" %c", &save_choice_char) != 1)
+    {
         printf("Entrada inválida.\n");
-        while(getchar()!='\n');
+        while (getchar() != '\n')
+            ;
         return;
     }
-    while(getchar()!='\n'); 
+    while (getchar() != '\n')
+        ;
 
     if (save_choice_char == 's' || save_choice_char == 'S')
     {
         char filename[100];
         printf("Digite o nome do arquivo para salvar: ");
-        if (fgets(filename, 100, stdin) == NULL) {
+        if (fgets(filename, 100, stdin) == NULL)
+        {
             printf("Erro ao ler nome do arquivo.\n");
             return;
         }
@@ -688,17 +731,21 @@ void decrypt_menu()
     printf("1. Digitar o texto cifrado\n");
     printf("2. Carregar o texto cifrado de um arquivo\n");
     printf("Opção: ");
-    if (scanf("%d", &choice) != 1) {
+    if (scanf("%d", &choice) != 1)
+    {
         printf("Entrada inválida.\n");
-        while(getchar()!='\n');
+        while (getchar() != '\n')
+            ;
         return;
     }
-    while(getchar()!='\n'); 
+    while (getchar() != '\n')
+        ;
 
     if (choice == 1)
     {
-        printf("Digite o texto cifrado (max %d caracteres):\n", MAX_TEXT_SIZE-1);
-        if (fgets(ciphertext, MAX_TEXT_SIZE, stdin) == NULL) {
+        printf("Digite o texto cifrado (max %d caracteres):\n", MAX_TEXT_SIZE - 1);
+        if (fgets(ciphertext, MAX_TEXT_SIZE, stdin) == NULL)
+        {
             printf("Erro ao ler texto cifrado.\n");
             return;
         }
@@ -708,7 +755,8 @@ void decrypt_menu()
     {
         char filename[100];
         printf("Digite o nome do arquivo: ");
-        if (fgets(filename, 100, stdin) == NULL) {
+        if (fgets(filename, 100, stdin) == NULL)
+        {
             printf("Erro ao ler nome do arquivo.\n");
             return;
         }
@@ -726,8 +774,9 @@ void decrypt_menu()
         return;
     }
 
-    printf("Digite a chave (apenas letras, sem espaços, max %d caracteres): ", MAX_KEY_SIZE-1);
-    if (fgets(key, MAX_KEY_SIZE, stdin) == NULL) {
+    printf("Digite a chave (apenas letras, sem espaços, max %d caracteres): ", MAX_KEY_SIZE - 1);
+    if (fgets(key, MAX_KEY_SIZE, stdin) == NULL)
+    {
         printf("Erro ao ler chave.\n");
         return;
     }
@@ -735,18 +784,24 @@ void decrypt_menu()
 
     // Validação da chave (apenas letras)
     int key_is_valid = 1;
-    if (strlen(key) == 0) {
+    if (strlen(key) == 0)
+    {
         key_is_valid = 0;
-    } else {
-        for (int k_idx = 0; key[k_idx] != '\0'; k_idx++) {
-            if (!isalpha(key[k_idx])) {
+    }
+    else
+    {
+        for (int k_idx = 0; key[k_idx] != '\0'; k_idx++)
+        {
+            if (!isalpha(key[k_idx]))
+            {
                 key_is_valid = 0;
                 break;
             }
         }
     }
 
-    if (!key_is_valid) {
+    if (!key_is_valid)
+    {
         printf("Chave inválida! Use apenas letras e não deixe a chave vazia.\n");
         return;
     }
@@ -758,18 +813,22 @@ void decrypt_menu()
 
     printf("\nDeseja salvar o texto decifrado? (s/n): ");
     char save_choice_char;
-    if (scanf(" %c", &save_choice_char) != 1) {
+    if (scanf(" %c", &save_choice_char) != 1)
+    {
         printf("Entrada inválida.\n");
-        while(getchar()!='\n');
+        while (getchar() != '\n')
+            ;
         return;
     }
-    while(getchar()!='\n');
+    while (getchar() != '\n')
+        ;
 
     if (save_choice_char == 's' || save_choice_char == 'S')
     {
         char filename[100];
         printf("Digite o nome do arquivo para salvar: ");
-        if (fgets(filename, 100, stdin) == NULL) {
+        if (fgets(filename, 100, stdin) == NULL)
+        {
             printf("Erro ao ler nome do arquivo.\n");
             return;
         }
@@ -787,10 +846,10 @@ void decrypt_menu()
  */
 void attack_menu()
 {
-    char ciphertext_input[MAX_TEXT_SIZE]; 
-    char cleaned_text[MAX_TEXT_SIZE];    
+    char ciphertext_input[MAX_TEXT_SIZE];
+    char cleaned_text[MAX_TEXT_SIZE];
     char recovered_key[MAX_KEY_SIZE];
-    char plaintext_output[MAX_TEXT_SIZE]; 
+    char plaintext_output[MAX_TEXT_SIZE];
     int choice, language_choice;
     int attack_method;
 
@@ -802,31 +861,38 @@ void attack_menu()
     printf("Escolha o método de ataque:\n");
     printf("1. Método do Qui-Quadrado (indicado para textos longos)\n");
     printf("2. Correlação Simples (indicado para textos curtos).\n");
-    
+
     // tem que estar entre 1 e 2
     printf("Opção: ");
-    if (scanf("%d", &attack_method) != 1) {
+    if (scanf("%d", &attack_method) != 1)
+    {
         printf("Entrada inválida.\n");
-        while(getchar()!='\n');
+        while (getchar() != '\n')
+            ;
         return;
     }
-    while(getchar()!='\n');
+    while (getchar() != '\n')
+        ;
 
     printf("Escolha uma opção para fornecer o texto cifrado:\n");
     printf("1. Digitar o texto cifrado\n");
     printf("2. Carregar o texto cifrado de um arquivo\n");
     printf("Opção: ");
-    if (scanf("%d", &choice) != 1) {
+    if (scanf("%d", &choice) != 1)
+    {
         printf("Entrada inválida.\n");
-        while(getchar()!='\n');
+        while (getchar() != '\n')
+            ;
         return;
     }
-    while(getchar()!='\n'); 
+    while (getchar() != '\n')
+        ;
 
     if (choice == 1)
     {
-        printf("Digite o texto cifrado (max %d caracteres):\n", MAX_TEXT_SIZE-1);
-        if (fgets(ciphertext_input, MAX_TEXT_SIZE, stdin) == NULL) {
+        printf("Digite o texto cifrado (max %d caracteres):\n", MAX_TEXT_SIZE - 1);
+        if (fgets(ciphertext_input, MAX_TEXT_SIZE, stdin) == NULL)
+        {
             printf("Erro ao ler texto cifrado.\n");
             return;
         }
@@ -836,7 +902,8 @@ void attack_menu()
     {
         char filename[100];
         printf("Digite o nome do arquivo contendo o texto cifrado: ");
-        if (fgets(filename, 100, stdin) == NULL) {
+        if (fgets(filename, 100, stdin) == NULL)
+        {
             printf("Erro ao ler nome do arquivo.\n");
             return;
         }
@@ -844,7 +911,7 @@ void attack_menu()
 
         if (!read_file(filename, ciphertext_input, MAX_TEXT_SIZE))
         {
-            return; 
+            return;
         }
         printf("Arquivo '%s' carregado.\n", filename);
     }
@@ -858,12 +925,15 @@ void attack_menu()
     printf("1. Português\n");
     printf("2. Inglês\n");
     printf("Opção: ");
-    if (scanf("%d", &language_choice) != 1) {
+    if (scanf("%d", &language_choice) != 1)
+    {
         printf("Entrada inválida.\n");
-        while(getchar()!='\n');
+        while (getchar() != '\n')
+            ;
         return;
     }
-    while(getchar()!='\n');
+    while (getchar() != '\n')
+        ;
 
     if (language_choice != 1 && language_choice != 2)
     {
@@ -875,14 +945,15 @@ void attack_menu()
 
     clean_text_to_lower(ciphertext_input, cleaned_text);
 
-    if (strlen(cleaned_text) == 0) {
+    if (strlen(cleaned_text) == 0)
+    {
         printf("O texto fornecido não contém letras para análise.\n");
         return;
     }
-    if (strlen(cleaned_text) < MAX_KEY_LENGTH_TO_TRY * 2 && strlen(cleaned_text) > 0) { 
+    if (strlen(cleaned_text) < MAX_KEY_LENGTH_TO_TRY * 2 && strlen(cleaned_text) > 0)
+    {
         printf("AVISO: O texto para análise é muito curto (%zu letras). Os resultados do ataque podem ser imprecisos, especialmente para chaves longas.\n", strlen(cleaned_text));
     }
-
 
     printf("\nIniciando análise do texto cifrado...\n");
     printf("Comprimento do texto cifrado original: %zu caracteres\n", strlen(ciphertext_input));
@@ -891,33 +962,41 @@ void attack_menu()
     double global_ic = index_of_coincidence(cleaned_text);
     printf("\nÍndice de Coincidência (IC) global do texto limpo: %.5f\n", global_ic);
     printf("IC esperado para texto em %s (teórico): %.5f\n",
-        is_portuguese ? "Português" : "Inglês",
-        is_portuguese ? 0.0761384 : 0.066699); 
-    printf("IC típico para texto aleatório (1/26): %.5f\n", 1.0/ALPHABET_SIZE);
+           is_portuguese ? "Português" : "Inglês",
+           is_portuguese ? 0.0761384 : 0.066699);
+    printf("IC típico para texto aleatório (1/26): %.5f\n", 1.0 / ALPHABET_SIZE);
 
-    if (global_ic > (is_portuguese ? 0.072 : 0.063) && strlen(cleaned_text) > 50) { 
+    if (global_ic > (is_portuguese ? 0.072 : 0.063) && strlen(cleaned_text) > 50)
+    {
         printf("AVISO: O IC global é relativamente alto. O texto pode não estar cifrado com Vigenère (ou chave muito curta/simples).\n");
-    } else if (global_ic > 0.0 && global_ic < 0.045 ) { 
+    }
+    else if (global_ic > 0.0 && global_ic < 0.045)
+    {
         printf("Confirmado: O IC baixo sugere uma cifra polialfabética (como Vigenère).\n");
-    } else if (global_ic == 0.0 && strlen(cleaned_text) > 0){
+    }
+    else if (global_ic == 0.0 && strlen(cleaned_text) > 0)
+    {
         printf("AVISO: O IC global é zero. Isso pode acontecer com textos muito curtos ou com padrões muito repetitivos.\n");
     }
-    else {
+    else
+    {
         printf("O IC global está em uma zona intermediária ou o texto é curto. A análise prosseguirá.\n");
     }
-
 
     printf("\nDeseja especificar um tamanho de chave ou usar análise automática?\n");
     printf("1. Usar análise automática para determinar o tamanho da chave\n");
     printf("2. Especificar manualmente o tamanho da chave\n");
     printf("Opção: ");
     int key_length_option;
-    if (scanf("%d", &key_length_option) != 1) {
+    if (scanf("%d", &key_length_option) != 1)
+    {
         printf("Entrada inválida.\n");
-        while(getchar()!='\n');
+        while (getchar() != '\n')
+            ;
         return;
     }
-    while(getchar()!='\n');
+    while (getchar() != '\n')
+        ;
 
     int key_length_to_use;
     if (key_length_option == 1)
@@ -927,13 +1006,16 @@ void attack_menu()
     else if (key_length_option == 2)
     {
         printf("Digite o tamanho da chave a ser testado (1-%d): ", MAX_KEY_LENGTH_TO_TRY); // MAX_KEY_LENGTH_TO_TRY é o limite superior para o ataque automático
-        if (scanf("%d", &key_length_to_use) != 1) {
+        if (scanf("%d", &key_length_to_use) != 1)
+        {
             printf("Entrada inválida.\n");
-            while(getchar()!='\n');
+            while (getchar() != '\n')
+                ;
             return;
         }
-        while(getchar()!='\n');
-        if (key_length_to_use <= 0 || key_length_to_use > MAX_KEY_SIZE -1 ) // Chave não pode ser maior que o buffer
+        while (getchar() != '\n')
+            ;
+        if (key_length_to_use <= 0 || key_length_to_use > MAX_KEY_SIZE - 1) // Chave não pode ser maior que o buffer
         {
             printf("Tamanho de chave inválido (%d). Usando análise automática.\n", key_length_to_use);
             key_length_to_use = find_key_length(cleaned_text, is_portuguese);
@@ -949,16 +1031,17 @@ void attack_menu()
         key_length_to_use = find_key_length(cleaned_text, is_portuguese);
     }
 
-    if (key_length_to_use <=0) { 
+    if (key_length_to_use <= 0)
+    {
         printf("Tamanho de chave inválido determinado (%d). Abortando ataque.\n", key_length_to_use);
         return;
     }
-    if (key_length_to_use > strlen(cleaned_text)){
+    if (key_length_to_use > strlen(cleaned_text))
+    {
         printf("AVISO: O tamanho da chave determinado (%d) é maior que o texto limpo (%zu). Isso é improvável. Verifique o texto ou tente um tamanho de chave menor.\n", key_length_to_use, strlen(cleaned_text));
         // Poderia abortar ou pedir para o usuário confirmar/inserir manualmente.
         // Por ora, o ataque prosseguirá, mas provavelmente falhará.
     }
-
 
     // Recupera a chave
     recover_key(cleaned_text, key_length_to_use, is_portuguese, recovered_key, attack_method);
@@ -973,20 +1056,24 @@ void attack_menu()
 
     printf("\nDeseja salvar o texto decifrado e o relatório? (s/n): ");
     char save_choice_char;
-    if (scanf(" %c", &save_choice_char) != 1) {
+    if (scanf(" %c", &save_choice_char) != 1)
+    {
         printf("Entrada inválida.\n");
-        while(getchar()!='\n');
+        while (getchar() != '\n')
+            ;
         return;
     }
-    while(getchar()!='\n');
+    while (getchar() != '\n')
+        ;
 
     if (save_choice_char == 's' || save_choice_char == 'S')
     {
         char out_filename[100];
-        char report_filename[115]; 
+        char report_filename[115];
 
         printf("Digite o nome base para os arquivos de saída (ex: 'resultado_ataque'): ");
-        if (fgets(out_filename, 100, stdin) == NULL) {
+        if (fgets(out_filename, 100, stdin) == NULL)
+        {
             printf("Erro ao ler nome base.\n");
             return;
         }
@@ -1017,7 +1104,9 @@ void attack_menu()
             fprintf(report_file, "TEXTO DECIFRADO (TENTATIVA):\n--INICIO TEXTO DECIFRADO--\n%s\n--FIM TEXTO DECIFRADO--\n", plaintext_output);
             fclose(report_file);
             printf("Relatório detalhado do ataque salvo em '%s'!\n", report_filename);
-        } else {
+        }
+        else
+        {
             printf("Erro ao criar arquivo de relatório '%s'.\n", report_filename);
         }
     }
@@ -1038,15 +1127,19 @@ int main()
         printf("3. Realizar ataque de recuperação de senha\n");
         printf("0. Sair\n");
         printf("Escolha uma opção: ");
-        
-        if (scanf("%d", &choice) != 1) {
-            printf("Opção inválida! Por favor, digite um número.\n");
-            while(getchar()!='\n');
-            choice = -1; 
-        } else {
-            while(getchar()!='\n');
-        }
 
+        if (scanf("%d", &choice) != 1)
+        {
+            printf("Opção inválida! Por favor, digite um número.\n");
+            while (getchar() != '\n')
+                ;
+            choice = -1;
+        }
+        else
+        {
+            while (getchar() != '\n')
+                ;
+        }
 
         switch (choice)
         {
@@ -1063,7 +1156,8 @@ int main()
             printf("Saindo do programa...\n");
             break;
         default:
-            if (choice != -1) { 
+            if (choice != -1)
+            {
                 printf("Opção inválida! Tente novamente.\n");
             }
         }
