@@ -81,3 +81,8 @@ Correlação = Σ(freq_observada × freq_esperada)
 
 - Maior correlação = melhor ajuste
 - Mais simples, funciona bem para textos curtos
+
+### Observações Finais
+
+- Complexidade do algoritmo: O(n \* k), onde n = tamanho do texto, k = tamanho da chave
+- Como melhorar?
