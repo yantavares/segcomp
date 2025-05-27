@@ -1,5 +1,7 @@
 # Cifra de Vigenère - Implementação e Ataque de Análise de Frequência
 
+**Obs.: Para uma versão funcional do código já hospedada, acesse [este site](https://yantavares.github.io/segcomp/). Esta versão usa as mesmas funções de cifragem e decifragem da implementação original em C, mas com uma interface web para facilitar o uso.**
+
 ## Descrição
 
 Este projeto contém uma implementação completa da cifra de Vigenère, incluindo funcionalidades para cifrar e decifrar mensagens, além de um módulo de ataque para recuperação de senha através de análise de frequência.
