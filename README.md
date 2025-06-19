@@ -1,5 +1,16 @@
 # SEGCOMP - 2025/2
 
+```
+
+  _________             _________
+ /   _____/ ____   ____ \_   ___ \  ____   _____ ______
+ \_____  \_/ __ \ / ___\/    \  \/ /  _ \ /     \\____ \
+ /        \  ___// /_/  >     \___(  <_> )  Y Y  \  |_> >
+/_______  /\___  >___  / \______  /\____/|__|_|  /   __/
+        \/     \/_____/         \/             \/|__|
+
+```
+
 Repositório para abrigar os códigos da disciplina de Segurança Computacional (SEGCOMP) da UnB. Mais detalhes sobre cada trabalho estão disponíveis nos diretórios correspondentes.
 
 ## Trabalho 1: [Cifra de Vigenère](./vigenere/)
