@@ -7,8 +7,8 @@
  * 2. Assinatura de arquivos usando RSA com padding OAEP e hash SHA3-256.
  * 3. Verificação de assinaturas em arquivos.
  *
- * O código utiliza a biblioteca GMP para aritmética de múltiplos precisão e OpenSSL
- * para a função de hash SHA3-256. As primitivas criptográficas de geração de chaves
+ * O código utiliza a biblioteca GMP para aritmética de múltiplos precisão e implementa
+ * SHA3-256 do zero. As primitivas criptográficas de geração de chaves
  * e cifração/decifração RSA-OAEP foram implementadas do zero.
  *
  * Autor: Yan Tavares e Eduardo Marques
@@ -20,12 +20,122 @@
 #include <string.h>
 #include <time.h>
 #include <gmp.h>
-#include <openssl/evp.h>
+#include <stdint.h>
 
 // --- Constantes ---
 #define KEY_BITS 2048
 #define MILLER_RABIN_ITERATIONS 40
-#define HASH_TYPE "SHA3-256"
+#define SHA3_256_DIGEST_SIZE 32
+
+// --- Implementação SHA3-256 do zero ---
+
+/**
+ * @brief Rotaciona bits à esquerda.
+ */
+static uint64_t rotl64(uint64_t x, int n) {
+    return (x << n) | (x >> (64 - n));
+}
+
+/**
+ * @brief Implementação da função SHA3-256.
+ * @param input Dados de entrada.
+ * @param input_len Comprimento dos dados.
+ * @param output Buffer para o hash (32 bytes).
+ */
+void sha3_256(const unsigned char *input, size_t input_len, unsigned char *output) {
+    // Constantes Keccak
+    static const uint64_t keccak_round_constants[24] = {
+        0x0000000000000001ULL, 0x0000000000008082ULL, 0x800000000000808aULL,
+        0x8000000080008000ULL, 0x000000000000808bULL, 0x0000000080000001ULL,
+        0x8000000080008081ULL, 0x8000000000008009ULL, 0x000000000000008aULL,
+        0x0000000000000088ULL, 0x0000000080008009ULL, 0x000000008000000aULL,
+        0x000000008000808bULL, 0x800000000000008bULL, 0x8000000000008089ULL,
+        0x8000000000008003ULL, 0x8000000000008002ULL, 0x8000000000000080ULL,
+        0x000000000000800aULL, 0x800000008000000aULL, 0x8000000080008081ULL,
+        0x8000000000008080ULL, 0x0000000080000001ULL, 0x8000000080008008ULL
+    };
+    
+    static const int rho_offsets[25] = {
+        0, 1, 62, 28, 27, 36, 44, 6, 55, 20, 3, 10, 43, 25, 39, 41, 45, 15, 21, 8, 18, 2, 61, 56, 14
+    };
+    
+    uint64_t state[25] = {0};
+    size_t rate = 136; // 1088 bits = 136 bytes para SHA3-256
+    size_t capacity = 64; // 512 bits = 64 bytes
+    
+    // Padding
+    size_t padded_len = input_len;
+    if ((input_len % rate) != (rate - 1)) {
+        padded_len = ((input_len / rate) + 1) * rate;
+    }
+    
+    unsigned char *padded = calloc(padded_len, 1);
+    memcpy(padded, input, input_len);
+    
+    // Aplicar padding 10*1
+    padded[input_len] = 0x06; // SHA3 padding
+    padded[padded_len - 1] |= 0x80;
+    
+    // Absorção
+    for (size_t i = 0; i < padded_len; i += rate) {
+        for (size_t j = 0; j < rate / 8; j++) {
+            uint64_t word = 0;
+            for (int k = 0; k < 8; k++) {
+                if (i + j * 8 + k < padded_len) {
+                    word |= ((uint64_t)padded[i + j * 8 + k]) << (k * 8);
+                }
+            }
+            state[j] ^= word;
+        }
+        
+        // Keccak-f[1600]
+        for (int round = 0; round < 24; round++) {
+            // θ (Theta)
+            uint64_t C[5], D[5];
+            for (int x = 0; x < 5; x++) {
+                C[x] = state[x] ^ state[x + 5] ^ state[x + 10] ^ state[x + 15] ^ state[x + 20];
+            }
+            for (int x = 0; x < 5; x++) {
+                D[x] = C[(x + 4) % 5] ^ rotl64(C[(x + 1) % 5], 1);
+            }
+            for (int x = 0; x < 5; x++) {
+                for (int y = 0; y < 5; y++) {
+                    state[y * 5 + x] ^= D[x];
+                }
+            }
+            
+            // ρ (Rho) and π (Pi)
+            uint64_t current = state[1];
+            for (int t = 0; t < 24; t++) {
+                int x = ((t + 1) * (t + 2) / 2) % 25;
+                uint64_t temp = state[x];
+                state[x] = rotl64(current, rho_offsets[x]);
+                current = temp;
+            }
+            
+            // χ (Chi)
+            for (int y = 0; y < 5; y++) {
+                uint64_t temp[5];
+                for (int x = 0; x < 5; x++) {
+                    temp[x] = state[y * 5 + x];
+                }
+                for (int x = 0; x < 5; x++) {
+                    state[y * 5 + x] = temp[x] ^ ((~temp[(x + 1) % 5]) & temp[(x + 2) % 5]);
+                }
+            }
+            
+            // ι (Iota)
+            state[0] ^= keccak_round_constants[round];
+        }
+    }
+    
+    // Extração (squeeze)
+    for (int i = 0; i < SHA3_256_DIGEST_SIZE; i++) {
+        output[i] = (state[i / 8] >> ((i % 8) * 8)) & 0xFF;
+    }
+    
+    free(padded);
+}
 
 // --- Funções de Base64 (Implementação auto-contida) ---
 
@@ -95,45 +205,60 @@ unsigned char *base64_decode(const char *src, size_t src_len, size_t *out_len) {
     return decoded_data;
 }
 
-// --- Funções de Hash (SHA3-256) ---
-
-/**
- * @brief Calcula o hash SHA3-256 de uma mensagem.
- * @param message Mensagem de entrada.
- * @param message_len Comprimento da mensagem.
- * @param digest Ponteiro para armazenar o hash (será alocado).
- * @param digest_len Ponteiro para armazenar o comprimento do hash.
- * @return 1 em sucesso, 0 em falha.
- */
-int sha3_hash(const unsigned char *message, size_t message_len, unsigned char **digest, unsigned int *digest_len) {
-    EVP_MD_CTX *mdctx;
-    const EVP_MD *md;
-
-    md = EVP_get_digestbyname(HASH_TYPE);
-    if (md == NULL) {
-        printf("Erro: Hash %s não encontrado.\n", HASH_TYPE);
-        return 0;
-    }
-
-    *digest = (unsigned char *)malloc(EVP_MD_size(md));
-    if (*digest == NULL) {
-        printf("Erro: Falha ao alocar memória para o hash.\n");
-        return 0;
-    }
-
-    mdctx = EVP_MD_CTX_new();
-    EVP_DigestInit_ex(mdctx, md, NULL);
-    EVP_DigestUpdate(mdctx, message, message_len);
-    EVP_DigestFinal_ex(mdctx, *digest, digest_len);
-    EVP_MD_CTX_free(mdctx);
-
-    return 1;
-}
-
 // --- Funções Criptográficas ---
 
 /**
- * @brief Gera um número primo com um número específico de bits.
+ * @brief Teste de primalidade Miller-Rabin.
+ * @param n Número a ser testado.
+ * @param k Número de iterações.
+ * @param rand_state Estado do gerador de números aleatórios.
+ * @return 1 se provavelmente primo, 0 se composto.
+ */
+int miller_rabin_test(mpz_t n, int k, gmp_randstate_t rand_state) {
+    if (mpz_cmp_ui(n, 2) == 0 || mpz_cmp_ui(n, 3) == 0) return 1;
+    if (mpz_cmp_ui(n, 1) <= 0 || mpz_even_p(n)) return 0;
+
+    mpz_t n_minus_1, d, a, x;
+    mpz_inits(n_minus_1, d, a, x, NULL);
+    
+    mpz_sub_ui(n_minus_1, n, 1);
+    mpz_set(d, n_minus_1);
+    
+    int r = 0;
+    while (mpz_even_p(d)) {
+        mpz_divexact_ui(d, d, 2);
+        r++;
+    }
+    
+    for (int i = 0; i < k; i++) {
+        mpz_urandomm(a, rand_state, n_minus_1);
+        if (mpz_cmp_ui(a, 2) < 0) mpz_set_ui(a, 2);
+        
+        mpz_powm(x, a, d, n);
+        
+        if (mpz_cmp_ui(x, 1) == 0 || mpz_cmp(x, n_minus_1) == 0) continue;
+        
+        int composite = 1;
+        for (int j = 0; j < r - 1; j++) {
+            mpz_powm_ui(x, x, 2, n);
+            if (mpz_cmp(x, n_minus_1) == 0) {
+                composite = 0;
+                break;
+            }
+        }
+        
+        if (composite) {
+            mpz_clears(n_minus_1, d, a, x, NULL);
+            return 0;
+        }
+    }
+    
+    mpz_clears(n_minus_1, d, a, x, NULL);
+    return 1;
+}
+
+/**
+ * @brief Gera um número primo com um número específico de bits usando Miller-Rabin.
  * @param prime Variável mpz_t para armazenar o primo.
  * @param bits O número de bits do primo.
  * @param rand_state Estado do gerador de números aleatórios do GMP.
@@ -142,8 +267,9 @@ void generate_prime(mpz_t prime, int bits, gmp_randstate_t rand_state) {
     do {
         mpz_urandomb(prime, rand_state, bits);
         mpz_setbit(prime, bits - 1); // Garante que tenha o número de bits correto
-        mpz_nextprime(prime, prime);
-    } while (mpz_sizeinbase(prime, 2) != bits);
+        mpz_setbit(prime, 0); // Garante que seja ímpar
+    } while (!miller_rabin_test(prime, MILLER_RABIN_ITERATIONS, rand_state) || 
+             mpz_sizeinbase(prime, 2) != bits);
 }
 
 /**
@@ -158,8 +284,8 @@ void generate_rsa_keys(mpz_t n, mpz_t e, mpz_t d, int bits) {
     gmp_randinit_default(rand_state);
     gmp_randseed_ui(rand_state, time(NULL));
 
-    mpz_t p, q, phi;
-    mpz_inits(p, q, phi, NULL);
+    mpz_t p, q, phi, gcd_result;
+    mpz_inits(p, q, phi, gcd_result, NULL);
 
     printf("Gerando primo p de %d bits... ", bits / 2);
     fflush(stdout);
@@ -168,7 +294,9 @@ void generate_rsa_keys(mpz_t n, mpz_t e, mpz_t d, int bits) {
 
     printf("Gerando primo q de %d bits... ", bits / 2);
     fflush(stdout);
-    generate_prime(q, bits / 2, rand_state);
+    do {
+        generate_prime(q, bits / 2, rand_state);
+    } while (mpz_cmp(p, q) == 0); // Garante que p != q
     printf("OK\n");
 
     mpz_mul(n, p, q); // n = p * q
@@ -178,13 +306,26 @@ void generate_rsa_keys(mpz_t n, mpz_t e, mpz_t d, int bits) {
     mpz_mul(phi, p, q);  // phi = (p-1) * (q-1)
 
     mpz_set_ui(e, 65537); // e = 65537
+    
+    // Verifica se mdc(e, phi) = 1
+    mpz_gcd(gcd_result, e, phi);
+    if (mpz_cmp_ui(gcd_result, 1) != 0) {
+        printf("Erro: e e phi não são coprimos. Tentando novamente.\n");
+        mpz_clears(p, q, phi, gcd_result, NULL);
+        gmp_randclear(rand_state);
+        generate_rsa_keys(n, e, d, bits);
+        return;
+    }
 
     if (mpz_invert(d, e, phi) == 0) {
         printf("Erro: Inverso modular não existe. Tentando novamente.\n");
-        generate_rsa_keys(n, e, d, bits); // Tenta novamente
+        mpz_clears(p, q, phi, gcd_result, NULL);
+        gmp_randclear(rand_state);
+        generate_rsa_keys(n, e, d, bits);
+        return;
     }
 
-    mpz_clears(p, q, phi, NULL);
+    mpz_clears(p, q, phi, gcd_result, NULL);
     gmp_randclear(rand_state);
 }
 
@@ -198,9 +339,8 @@ void generate_rsa_keys(mpz_t n, mpz_t e, mpz_t d, int bits) {
 void mgf1(const unsigned char *seed, size_t seed_len, unsigned char *mask, size_t mask_len) {
     unsigned char *counter = (unsigned char *)malloc(4);
     unsigned char *hash_input = (unsigned char *)malloc(seed_len + 4);
-    unsigned char *digest;
-    unsigned int digest_len;
-    size_t h_len = EVP_MD_size(EVP_get_digestbyname(HASH_TYPE));
+    unsigned char digest[SHA3_256_DIGEST_SIZE];
+    size_t h_len = SHA3_256_DIGEST_SIZE;
     size_t offset = 0;
 
     for (uint32_t i = 0; offset < mask_len; i++) {
@@ -212,17 +352,15 @@ void mgf1(const unsigned char *seed, size_t seed_len, unsigned char *mask, size_
         memcpy(hash_input, seed, seed_len);
         memcpy(hash_input + seed_len, counter, 4);
 
-        sha3_hash(hash_input, seed_len + 4, &digest, &digest_len);
+        sha3_256(hash_input, seed_len + 4, digest);
 
         size_t copy_len = (offset + h_len <= mask_len) ? h_len : mask_len - offset;
         memcpy(mask + offset, digest, copy_len);
         offset += h_len;
-        free(digest);
     }
     free(counter);
     free(hash_input);
 }
-
 
 /**
  * @brief Implementa o padding RSA-OAEP.
@@ -233,7 +371,7 @@ void mgf1(const unsigned char *seed, size_t seed_len, unsigned char *mask, size_
  * @return 1 em sucesso, 0 em falha.
  */
 int rsa_oaep_pad(const unsigned char *message, size_t message_len, int k, unsigned char **padded_message) {
-    unsigned int h_len = EVP_MD_size(EVP_get_digestbyname(HASH_TYPE));
+    unsigned int h_len = SHA3_256_DIGEST_SIZE;
 
     if (message_len > k - 2 * h_len - 2) {
         printf("Erro: Mensagem muito longa para OAEP.\n");
@@ -243,23 +381,30 @@ int rsa_oaep_pad(const unsigned char *message, size_t message_len, int k, unsign
     *padded_message = (unsigned char *)malloc(k);
     memset(*padded_message, 0, k);
 
-    unsigned char *l_hash;
-    unsigned int l_hash_len;
-    sha3_hash((const unsigned char *)"", 0, &l_hash, &l_hash_len); // Label vazia
+    unsigned char l_hash[SHA3_256_DIGEST_SIZE];
+    sha3_256((const unsigned char *)"", 0, l_hash); // Label vazia
 
     size_t ps_len = k - message_len - 2 * h_len - 2;
-    size_t db_len = l_hash_len + ps_len + 1 + message_len;
+    size_t db_len = h_len + ps_len + 1 + message_len;
     unsigned char *db = (unsigned char *)malloc(db_len);
 
-    memcpy(db, l_hash, l_hash_len);
-    memset(db + l_hash_len, 0, ps_len);
-    db[l_hash_len + ps_len] = 0x01;
-    memcpy(db + l_hash_len + ps_len + 1, message, message_len);
+    memcpy(db, l_hash, h_len);
+    memset(db + h_len, 0, ps_len);
+    db[h_len + ps_len] = 0x01;
+    memcpy(db + h_len + ps_len + 1, message, message_len);
 
     unsigned char seed[h_len];
     FILE *f = fopen("/dev/urandom", "rb");
-    fread(seed, 1, h_len, f);
-    fclose(f);
+    if (!f) {
+        // Fallback para sistemas sem /dev/urandom
+        srand(time(NULL));
+        for (size_t i = 0; i < h_len; i++) {
+            seed[i] = rand() & 0xFF;
+        }
+    } else {
+        fread(seed, 1, h_len, f);
+        fclose(f);
+    }
 
     unsigned char *db_mask = (unsigned char *)malloc(db_len);
     mgf1(seed, h_len, db_mask, db_len);
@@ -282,7 +427,6 @@ int rsa_oaep_pad(const unsigned char *message, size_t message_len, int k, unsign
     memcpy((*padded_message) + 1, masked_seed, h_len);
     memcpy((*padded_message) + 1 + h_len, masked_db, db_len);
 
-    free(l_hash);
     free(db);
     free(db_mask);
     free(masked_db);
@@ -301,7 +445,7 @@ int rsa_oaep_pad(const unsigned char *message, size_t message_len, int k, unsign
  * @return 1 em sucesso, 0 em falha.
  */
 int rsa_oaep_unpad(const unsigned char *padded_message, int k, unsigned char **message, size_t *message_len) {
-    unsigned int h_len = EVP_MD_size(EVP_get_digestbyname(HASH_TYPE));
+    unsigned int h_len = SHA3_256_DIGEST_SIZE;
 
     if (k < 2 * h_len + 2) {
         return 0;
@@ -327,18 +471,15 @@ int rsa_oaep_unpad(const unsigned char *padded_message, int k, unsigned char **m
         db[i] = masked_db[i] ^ db_mask[i];
     }
 
-    unsigned char *l_hash_prime;
-    unsigned int l_hash_prime_len;
-    sha3_hash((const unsigned char *)"", 0, &l_hash_prime, &l_hash_prime_len);
+    unsigned char l_hash_prime[SHA3_256_DIGEST_SIZE];
+    sha3_256((const unsigned char *)"", 0, l_hash_prime);
 
     if (memcmp(db, l_hash_prime, h_len) != 0) {
         printf("Erro de unpadding: lHash não corresponde.\n");
-        // Libera memória antes de retornar
         free(seed_mask);
         free(seed);
         free(db_mask);
         free(db);
-        free(l_hash_prime);
         return 0;
     }
     
@@ -354,7 +495,6 @@ int rsa_oaep_unpad(const unsigned char *padded_message, int k, unsigned char **m
         free(seed);
         free(db_mask);
         free(db);
-        free(l_hash_prime);
         return 0;
     }
 
@@ -366,7 +506,6 @@ int rsa_oaep_unpad(const unsigned char *padded_message, int k, unsigned char **m
     free(seed);
     free(db_mask);
     free(db);
-    free(l_hash_prime);
 
     return 1;
 }
@@ -426,7 +565,6 @@ void save_keys(mpz_t n, mpz_t e, mpz_t d) {
     free(d_str);
 }
 
-
 /**
  * @brief Carrega uma chave RSA (pública ou privada) de um arquivo.
  * @param filename Nome do arquivo da chave.
@@ -438,14 +576,13 @@ int load_key(const char* filename, mpz_t n, mpz_t exp) {
     FILE *f = fopen(filename, "r");
     if (!f) return 0;
     
-    // Usar gmp_fscanf para ler números hexadecimais
     if (mpz_inp_str(n, f, 16) == 0) {
         fclose(f);
-        return 0; // Erro ao ler n
+        return 0;
     }
     if (mpz_inp_str(exp, f, 16) == 0) {
         fclose(f);
-        return 0; // Erro ao ler exp
+        return 0;
     }
 
     fclose(f);
@@ -460,10 +597,24 @@ void generate_keys_menu() {
     mpz_inits(n, e, d, NULL);
 
     printf("\nGerando par de chaves RSA de %d bits...\n", KEY_BITS);
+    printf("Testando primalidade com Miller-Rabin (%d iterações)...\n", MILLER_RABIN_ITERATIONS);
     generate_rsa_keys(n, e, d, KEY_BITS);
     save_keys(n, e, d);
 
     mpz_clears(n, e, d, NULL);
+}
+
+/**
+ * @brief Função wrapper para calcular SHA3-256.
+ * @param input Dados de entrada.
+ * @param input_len Comprimento dos dados.
+ * @param output Ponteiro para o buffer do hash (será alocado).
+ * @param output_len Ponteiro para o comprimento do hash.
+ */
+void sha3_hash(const unsigned char *input, size_t input_len, unsigned char **output, unsigned int *output_len) {
+    *output = malloc(SHA3_256_DIGEST_SIZE);
+    sha3_256(input, input_len, *output);
+    *output_len = SHA3_256_DIGEST_SIZE;
 }
 
 /**
@@ -678,7 +829,98 @@ void verify_file_menu() {
 }
 
 /**
- * @brief Função principal com o menu de interação.
+ * @brief Menu para extrair a mensagem original de um arquivo assinado.
+ */
+void extract_message_menu() {
+    char signed_file_name[256], output_file[256];
+    
+    printf("Digite o nome do arquivo assinado (ex: arquivo.txt.signed): ");
+    scanf("%255s", signed_file_name);
+
+    // 1. Ler e parsear o arquivo assinado
+    FILE *f = fopen(signed_file_name, "r");
+    if (!f) {
+        printf("Erro ao abrir o arquivo assinado '%s'.\n", signed_file_name);
+        return;
+    }
+
+    char line[1024];
+    char *content_b64 = NULL;
+    size_t content_alloc = 0;
+    size_t content_len = 0;
+    int reading_content = 0;
+
+    while (fgets(line, sizeof(line), f)) {
+        if (strncmp(line, "-----BEGIN SIGNED MESSAGE-----", 29) == 0) {
+            reading_content = 1;
+            continue;
+        } else if (strncmp(line, "-----BEGIN SIGNATURE-----", 24) == 0) {
+            reading_content = 0;
+            break;
+        }
+
+        if (reading_content) {
+            size_t line_len = strlen(line);
+            if (line[line_len-1] == '\n') line_len--;
+            if (content_len + line_len + 1 > content_alloc) {
+                content_alloc = (content_alloc == 0) ? line_len + 1 : content_alloc * 2;
+                content_b64 = realloc(content_b64, content_alloc);
+            }
+            memcpy(content_b64 + content_len, line, line_len);
+            content_len += line_len;
+        }
+    }
+    fclose(f);
+    
+    if (content_b64) content_b64[content_len] = '\0';
+
+    if (!content_b64) {
+        printf("Erro: Não foi possível encontrar a mensagem no arquivo assinado.\n");
+        return;
+    }
+    
+    // 2. Decodificar Base64
+    size_t original_content_len;
+    unsigned char *original_content = base64_decode(content_b64, content_len, &original_content_len);
+    
+    if (!original_content) {
+        printf("Erro: Não foi possível decodificar a mensagem Base64.\n");
+        free(content_b64);
+        return;
+    }
+
+    printf("\nConteúdo da mensagem: ");
+    for (size_t i = 0; i < original_content_len; i++) {
+        printf("%c", original_content[i]);
+    }
+    printf("\n\n");
+
+    printf("Deseja salvar a mensagem original em um arquivo? (s/n): ");
+    char save_choice;
+    scanf(" %c", &save_choice);
+    if (save_choice == 's' || save_choice == 'S') {
+        printf("Digite o nome do arquivo de saída (ex: mensagem.txt): ");
+        scanf("%255s", output_file);
+        
+        FILE *out_file = fopen(output_file, "wb");
+        if (!out_file) {
+            printf("Erro ao criar o arquivo de saída '%s'.\n", output_file);
+        } else {
+            fwrite(original_content, 1, original_content_len, out_file);
+            fclose(out_file);
+            printf("Mensagem original salva em '%s'.\n", output_file);
+        }
+    }
+    else {
+        printf("Mensagem original não salva.\n");
+    }
+    // Limpeza
+    free(content_b64);
+    free(original_content);
+}
+
+/**
+ * @brief Função principal com o menu de interação (versão atualizada).
  */
 int main() {
     int choice;
@@ -688,6 +930,7 @@ int main() {
         printf("1. Gerar chaves RSA\n");
         printf("2. Assinar arquivo\n");
         printf("3. Verificar assinatura\n");
+        printf("4. Extrair mensagem original (arquivo .txt)\n");
         printf("0. Sair\n");
         printf("Escolha uma opção: ");
 
@@ -708,6 +951,9 @@ int main() {
                 break;
             case 3:
                 verify_file_menu();
+                break;
+            case 4:
+                extract_message_menu();
                 break;
             case 0:
                 printf("Saindo do programa...\n");
