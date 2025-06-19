@@ -48,13 +48,12 @@ O processo de verificação segue estes passos:
 
 - Compilador C (GCC recomendado)
 - Biblioteca GMP (GNU Multiple Precision Arithmetic Library)
-- Biblioteca OpenSSL
 - Biblioteca Standard C
 
 ### Compilação
 
 ```bash
-gcc -o rsa_signer main.c -lgmp -lssl -lcrypto
+gcc -o rsa_signer main.c -lgmp
 ```
 
 ### Uso
