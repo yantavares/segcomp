@@ -24,12 +24,13 @@
       }
 
       .container {
+        position: relative;
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
         border-radius: 20px;
         padding: 40px;
         box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-        max-width: 800px;
+        max-width: 900px;
         width: 100%;
         position: relative;
         overflow: hidden;
@@ -68,10 +69,11 @@
       }
 
       .menu {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
         gap: 20px;
-        margin-bottom: 30px;
+        align-items: center;
       }
 
       .menu-button {
@@ -306,36 +308,90 @@
         }
 
         .menu {
-          grid-template-columns: 1fr;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+          justify-content: center;
         }
+      }
+
+      .authors {
+        text-align: center;
+        margin-top: 20px;
+        width: 100%;
+        justify-content: center;
+        margin-top: 20px;
+        font-size: 1.1em;
+        align-items: center;
+        color: #666;
+      }
+      .home-button {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #333;
+        cursor: pointer;
+        transition: color 0.2s ease;
+      }
+
+      .home-button:hover {
+        color: #000;
       }
     </style>
   </head>
   <body>
     <div class="container">
+      <button
+        class="home-button"
+        onclick="window.location.href='index.html'"
+        aria-label="Voltar ao início"
+      >
+        <!-- Left arrow svg -->
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+
       <h1>🔐 Assinatura Digital RSA</h1>
 
       <div id="main-menu" class="menu">
         <button class="menu-button" onclick="showSection('generate-keys')">
-          🗝️ Gerar Chaves RSA
+          Gerar Chaves RSA
         </button>
         <button class="menu-button" onclick="showSection('sign-file')">
-          ✍️ Assinar Arquivo
+          Assinar Arquivo
         </button>
         <button class="menu-button" onclick="showSection('verify-signature')">
-          ✅ Verificar Assinatura
+          Verificar Assinatura
         </button>
         <button class="menu-button" onclick="showSection('extract-message')">
-          📄 Extrair Mensagem
+          Extrair Mensagem
         </button>
+      </div>
+
+      <div class="authors">
+        <p>Feito por Yan Tavares e Eduardo Marques</p>
       </div>
 
       <!-- Seção Gerar Chaves -->
       <div id="generate-keys" class="section">
         <h2>🗝️ Gerar Par de Chaves RSA</h2>
         <p>
-          Gerando chaves RSA de 2048 bits com teste de primalidade
-          Miller-Rabin...
+          Gerando chaves RSA de 2048 bits com teste de primalidade Miller-Rabin
         </p>
         <br />
         <button class="action-button" onclick="generateKeys()">
@@ -644,7 +700,7 @@
         document
           .querySelectorAll(".section")
           .forEach((s) => s.classList.remove("active"));
-        document.getElementById("main-menu").style.display = "grid";
+        document.getElementById("main-menu").style.display = "flex";
       }
 
       function showResult(elementId, content, isSuccess = true) {
@@ -709,6 +765,7 @@
         URL.revokeObjectURL(url);
       }
 
+      // --- Função de assinatura corrigida ---
       async function signFile() {
         const fileInput = document.getElementById("file-to-sign");
         const privateKeyInput = document.getElementById("private-key-input");
@@ -721,7 +778,6 @@
           );
           return;
         }
-
         if (!privateKeyInput.value.trim()) {
           showResult(
             "sign-result",
@@ -734,36 +790,42 @@
         try {
           const file = fileInput.files[0];
           const fileContent = new Uint8Array(await file.arrayBuffer());
-          const [n, d] = privateKeyInput.value.trim().split(",");
+          const [nHex, dHex] = privateKeyInput.value.trim().split(",");
 
-          // 1. Calcular hash do arquivo
+          // 1) Hash do arquivo
           const fileHash = sha3Hash(CryptoJS.lib.WordArray.create(fileContent));
           const hashBytes = hexToBytes(fileHash);
 
-          // 2. Calcular keySize corretamente com BigInt
-          //    (em vez de parseInt que perde precisão em números grandes)
-          const modulus = BigInt("0x" + n);
-          const bitLen = modulus.toString(2).length;
+          // 2) keySize via BigInt
+          const nBig = BigInt("0x" + nHex);
+          const bitLen = nBig.toString(2).length;
           const keySize = Math.ceil(bitLen / 8);
 
-          // 3. Aplicar padding OAEP
-          const paddedHash = oaepPad(hashBytes, keySize);
+          // 3) OAEP pad
+          const em = oaepPad(hashBytes, keySize);
+          const emHex = bytesToHex(em);
+          const mBig = BigInt("0x" + emHex);
+          const dBig = BigInt("0x" + dHex);
 
-          // 3. "Assinar" com a chave privada (simulado)
-          const signature = bytesToHex(paddedHash); // Simplificado
+          // 4) RSA-sign: m^d mod n
+          const sigBig = modPow(mBig, dBig, nBig);
+          // garante comprimento constante em hex (keySize * 2 dígitos)
+          const sigHex = sigBig.toString(16).padStart(keySize * 2, "0");
+          const sigBytes = hexToBytes(sigHex);
+          const sigB64 = base64Encode(sigBytes);
 
-          // 4. Criar arquivo assinado
+          // 5) Monta o arquivo assinado
           const contentB64 = base64Encode(fileContent);
-          const signatureB64 = base64Encode(hexToBytes(signature));
+          const signedText = [
+            "-----BEGIN SIGNED MESSAGE-----",
+            contentB64,
+            "-----BEGIN SIGNATURE-----",
+            sigB64,
+            "-----END SIGNATURE-----",
+          ].join("\n");
 
-          const signedContent = `-----BEGIN SIGNED MESSAGE-----
-${contentB64}
------BEGIN SIGNATURE-----
-${signatureB64}
------END SIGNATURE-----`;
-
-          // Download do arquivo assinado
-          const blob = new Blob([signedContent], { type: "text/plain" });
+          // download….
+          const blob = new Blob([signedText], { type: "text/plain" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
@@ -774,24 +836,24 @@ ${signatureB64}
           showResult(
             "sign-result",
             `
-                    ✅ Arquivo assinado com sucesso!
-                    <div class="file-info">
-                        <strong>Arquivo:</strong> ${file.name}<br>
-                        <strong>Tamanho:</strong> ${file.size} bytes<br>
-                        <strong>Hash SHA3-256:</strong> ${fileHash}
-                    </div>
-                    <p>O arquivo assinado foi baixado automaticamente.</p>
-                `
+      ✅ Arquivo assinado com sucesso!
+      <div class="file-info">
+        <strong>Arquivo:</strong> ${file.name}<br>
+        <strong>Hash SHA3-256:</strong> ${fileHash}
+      </div>
+      <p>O arquivo .signed foi baixado automaticamente.</p>
+    `
           );
-        } catch (error) {
+        } catch (err) {
           showResult(
             "sign-result",
-            "❌ Erro ao assinar arquivo: " + error.message,
+            "❌ Erro ao assinar arquivo: " + err.message,
             false
           );
         }
       }
 
+      // --- Função de verificação corrigida ---
       async function verifySignature() {
         const fileInput = document.getElementById("signed-file");
         const publicKeyInput = document.getElementById("public-key-input");
@@ -804,7 +866,6 @@ ${signatureB64}
           );
           return;
         }
-
         if (!publicKeyInput.value.trim()) {
           showResult(
             "verify-result",
@@ -816,81 +877,128 @@ ${signatureB64}
 
         try {
           const file = fileInput.files[0];
-          const fileContent = await file.text();
-          const [n, e] = publicKeyInput.value.trim().split(",");
+          const text = await file.text();
+          const [nHex, eHex] = publicKeyInput.value.trim().split(",");
 
-          // Parse do arquivo assinado
-          const lines = fileContent.split("\n");
-          let contentB64 = "";
-          let signatureB64 = "";
-          let readingContent = false;
-          let readingSignature = false;
-
-          for (const line of lines) {
-            if (line.includes("BEGIN SIGNED MESSAGE")) {
-              readingContent = true;
+          // 1) Extrai conteúdo e assinatura
+          const lines = text.split("\n");
+          let inMsg = false,
+            inSig = false,
+            contentB64 = "",
+            sigB64 = "";
+          for (let l of lines) {
+            if (l.includes("BEGIN SIGNED MESSAGE")) {
+              inMsg = true;
               continue;
-            } else if (line.includes("BEGIN SIGNATURE")) {
-              readingContent = false;
-              readingSignature = true;
+            }
+            if (l.includes("BEGIN SIGNATURE")) {
+              inMsg = false;
+              inSig = true;
               continue;
-            } else if (line.includes("END SIGNATURE")) {
-              readingSignature = false;
-              break;
             }
-
-            if (readingContent) {
-              contentB64 += line.trim();
-            } else if (readingSignature) {
-              signatureB64 += line.trim();
-            }
+            if (l.includes("END SIGNATURE")) break;
+            if (inMsg) contentB64 += l.trim();
+            if (inSig) sigB64 += l.trim();
           }
-
-          if (!contentB64 || !signatureB64) {
+          if (!contentB64 || !sigB64)
             throw new Error("Formato de arquivo assinado inválido");
-          }
 
-          // Decodificar conteúdo e assinatura
-          const originalContent = base64Decode(contentB64);
-          const signature = base64Decode(signatureB64);
-
-          // Calcular hash do conteúdo original
-          const calculatedHash = sha3Hash(
-            CryptoJS.lib.WordArray.create(originalContent)
+          // 2) Decodifica e calcula hash
+          const originalBytes = base64Decode(contentB64);
+          const calcHash = sha3Hash(
+            CryptoJS.lib.WordArray.create(originalBytes)
           );
 
-          // Para demonstração, assumimos que a verificação é bem-sucedida
-          // Em uma implementação real, aqui faria a verificação criptográfica completa
-          const isValid = true; // Simplificado
+          // 3) Prepara BigInts e keySize
+          const nBig = BigInt("0x" + nHex);
+          const eBig = BigInt("0x" + eHex);
+          const bitLen = nBig.toString(2).length;
+          const keySize = Math.ceil(bitLen / 8);
 
-          if (isValid) {
+          // 4) Decodifica assinatura Base64→bytes→BigInt
+          const sigBytes = base64Decode(sigB64);
+          const sigHex = bytesToHex(sigBytes);
+          const sigBig = BigInt("0x" + sigHex);
+
+          // 5) RSA-verify: sig^e mod n = EM
+          const emBig = modPow(sigBig, eBig, nBig);
+          const emHex = emBig.toString(16).padStart(keySize * 2, "0");
+          const em = hexToBytes(emHex);
+
+          // 6) OAEP-unpad → recupera hash
+          const recoveredHashBytes = oaepUnpad(em);
+          const recHashHex = bytesToHex(recoveredHashBytes);
+
+          // 7) Compara
+          if (recHashHex === calcHash) {
             showResult(
               "verify-result",
               `
-                        🎉 ASSINATURA VÁLIDA!
-                        <div class="file-info">
-                            <strong>Arquivo:</strong> ${file.name}<br>
-                            <strong>Tamanho do conteúdo:</strong> ${originalContent.length} bytes<br>
-                            <strong>Hash calculado:</strong> ${calculatedHash}<br>
-                            <strong>Status:</strong> ✅ Verificação bem-sucedida
-                        </div>
-                    `
+        🎉 ASSINATURA VÁLIDA!
+        <div class="file-info">
+          <strong>Arquivo:</strong> ${file.name}<br>
+          <strong>Hash calculado:</strong> ${calcHash}<br>
+          <strong>Hash recuperado:</strong> ${recHashHex}
+        </div>
+      `
             );
           } else {
             showResult("verify-result", "❌ ASSINATURA INVÁLIDA!", false);
           }
-        } catch (error) {
+        } catch (err) {
           showResult(
             "verify-result",
-            "❌ Erro ao verificar assinatura: " + error.message,
+            "❌ Erro ao verificar assinatura: " + err.message,
             false
           );
         }
       }
 
+      // --- Implementação de unpad OAEP (inverte o oaepPad) ---
+      function oaepUnpad(em) {
+        const hLen = 32;
+        // em = 0x00 || maskedSeed[hLen] || maskedDB[keySize-1-hLen]
+        const maskedSeed = em.slice(1, 1 + hLen);
+        const maskedDB = em.slice(1 + hLen);
+
+        // seed = maskedSeed ^ MGF1(maskedDB, hLen)
+        const seedMask = mgf1(maskedDB, hLen);
+        const seed = maskedSeed.map((b, i) => b ^ seedMask[i]);
+
+        // db = maskedDB ^ MGF1(seed, dbLen)
+        const dbMask = mgf1(seed, maskedDB.length);
+        const db = maskedDB.map((b, i) => b ^ dbMask[i]);
+
+        // verifica lHash (todos zeros) e busca 0x01
+        let idx = hLen;
+        while (db[idx] === 0x00) idx++;
+        if (db[idx] !== 0x01) throw new Error("Erro no unpad OAEP");
+
+        // retorna só os bytes após o 0x01
+        return db.slice(idx + 1);
+      }
+      // --- função para remover OAEP (simplificada) ---
+      function oaepUnpad(em) {
+        const hLen = 32;
+        const maskedSeed = em.slice(1, 1 + hLen);
+        const maskedDB = em.slice(1 + hLen);
+
+        const seedMask = mgf1(maskedDB, hLen);
+        const seed = maskedSeed.map((b, i) => b ^ seedMask[i]);
+
+        const dbMask = mgf1(seed, maskedDB.length);
+        const db = maskedDB.map((b, i) => b ^ dbMask[i]);
+
+        // pular lHash (hLen) e todos os 0x00 até encontrar 0x01
+        let idx = hLen;
+        while (db[idx] === 0x00) idx++;
+        if (db[idx] !== 0x01) throw new Error("Erro no unpad OAEP");
+
+        // a mensagem “recuperada” é tudo depois do 0x01
+        return db.slice(idx + 1);
+      }
       async function extractMessage() {
         const fileInput = document.getElementById("extract-file");
-
         if (!fileInput.files[0]) {
           showResult(
             "extract-result",
@@ -902,114 +1010,56 @@ ${signatureB64}
 
         try {
           const file = fileInput.files[0];
-          const fileContent = await file.text();
+          const text = await file.text();
 
-          // Parse do arquivo assinado
-          const lines = fileContent.split("\n");
-          let contentB64 = "";
-          let readingContent = false;
-
-          for (const line of lines) {
-            if (line.includes("BEGIN SIGNED MESSAGE")) {
-              readingContent = true;
+          // Extrai só o bloco de mensagem em Base64
+          const lines = text.split("\n");
+          let inMsg = false,
+            contentB64 = "";
+          for (let l of lines) {
+            if (l.includes("BEGIN SIGNED MESSAGE")) {
+              inMsg = true;
               continue;
-            } else if (line.includes("BEGIN SIGNATURE")) {
-              readingContent = false;
+            }
+            if (l.includes("BEGIN SIGNATURE")) {
               break;
             }
-
-            if (readingContent) {
-              contentB64 += line.trim();
-            }
+            if (inMsg) contentB64 += l.trim();
           }
-
-          if (!contentB64) {
+          if (!contentB64)
             throw new Error("Conteúdo não encontrado no arquivo assinado");
+
+          // Decodifica Base64 → bytes → string
+          const bytes = base64Decode(contentB64);
+          let message;
+          try {
+            message = bytesToString(bytes);
+          } catch {
+            // Se não for texto UTF-8, cai aqui
+            message = "[conteúdo binário não é texto legível]";
           }
 
-          // Decodificar conteúdo original
-          const originalContent = base64Decode(contentB64);
-
-          // Determinar tipo de arquivo baseado no conteúdo
-          let fileType = "application/octet-stream";
-          let fileName = "extracted_message";
-
-          // Detectar tipo de arquivo pelos primeiros bytes
-          if (originalContent[0] === 0xff && originalContent[1] === 0xd8) {
-            fileType = "image/jpeg";
-            fileName += ".jpg";
-          } else if (
-            originalContent[0] === 0x89 &&
-            originalContent[1] === 0x50 &&
-            originalContent[2] === 0x4e &&
-            originalContent[3] === 0x47
-          ) {
-            fileType = "image/png";
-            fileName += ".png";
-          } else if (
-            originalContent[0] === 0x25 &&
-            originalContent[1] === 0x50 &&
-            originalContent[2] === 0x44 &&
-            originalContent[3] === 0x46
-          ) {
-            fileType = "application/pdf";
-            fileName += ".pdf";
-          } else {
-            // Verificar se é texto
-            try {
-              const textContent = bytesToString(originalContent);
-              if (
-                textContent.length > 0 &&
-                /^[\x20-\x7E\s]*$/.test(textContent)
-              ) {
-                fileType = "text/plain";
-                fileName += ".txt";
-              }
-            } catch (e) {
-              fileName += ".bin";
-            }
-          }
-
-          // Criar download do arquivo extraído
-          const blob = new Blob([originalContent], { type: fileType });
-          const url = URL.createObjectURL(blob);
-          const downloadLink = document.createElement("a");
-          downloadLink.href = url;
-          downloadLink.download = fileName;
-
-          // Calcular hash para verificação
-          const contentHash = sha3Hash(
-            CryptoJS.lib.WordArray.create(originalContent)
-          );
-
+          // Exibe na tela
           showResult(
             "extract-result",
             `
-                    ✅ Mensagem extraída com sucesso!
-                    <div class="file-info">
-                        <strong>Arquivo original:</strong> ${file.name}<br>
-                        <strong>Tamanho extraído:</strong> ${originalContent.length} bytes<br>
-                        <strong>Tipo detectado:</strong> ${fileType}<br>
-                        <strong>Hash SHA3-256:</strong> ${contentHash}
-                    </div>
-                    <button class="action-button" onclick="document.querySelector('a[download="${fileName}"]').click()">
-                        📥 Baixar Arquivo Extraído
-                    </button>
-                    <a href="${url}" download="${fileName}" style="display: none;"></a>
-                `
+      ✅ Mensagem extraída com sucesso!
+      <div class="file-info">
+        <strong>Arquivo fonte:</strong> ${file.name}<br>
+        <strong>Tamanho extraído:</strong> ${bytes.length} bytes
+      </div>
+      <h4>📜 Conteúdo:</h4>
+      <pre style="white-space: pre-wrap; background: #f0f0f0; padding: 10px; border-radius: 5px;">${message}</pre>
+    `
           );
-
-          // Limpar URL após 5 segundos
-          setTimeout(() => URL.revokeObjectURL(url), 5000);
-        } catch (error) {
+        } catch (err) {
           showResult(
             "extract-result",
-            "❌ Erro ao extrair mensagem: " + error.message,
+            "❌ Erro ao extrair mensagem: " + err.message,
             false
           );
         }
       }
-
       // Função para converter BigInt para hex (compatibilidade)
       function bigIntToHex(bigIntValue) {
         return bigIntValue.toString(16);

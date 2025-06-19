@@ -1,59 +1,65 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Escolha de Ferramenta</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Escolha de Ferramenta</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
 
-    .container {
-      background: white;
-      padding: 40px;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      text-align: center;
-    }
+      .container {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        text-align: center;
+      }
 
-    h1 {
-      margin-bottom: 30px;
-      color: #2c3e50;
-    }
+      h1 {
+        margin-bottom: 30px;
+        color: #2c3e50;
+      }
 
-    .btn {
-      display: inline-block;
-      padding: 15px 30px;
-      margin: 10px;
-      font-size: 1.1em;
-      font-weight: bold;
-      color: white;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      text-decoration: none;
-    }
+      .btn {
+        display: inline-block;
+        padding: 15px 30px;
+        margin: 10px;
+        font-size: 1.1em;
+        font-weight: bold;
+        color: white;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-decoration: none;
+      }
 
-    .btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Bem-vindo! Escolha uma ferramenta:</h1>
-    <a href="vigenere.html" class="btn">🔐 Cifra de Vigenère</a>
-    <a href="rsa.html" class="btn">🛠️ Outra Ferramenta</a>
-  </div>
-</body>
+      .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Repositório de Segurança Computacional</h2>
+      <p>Feito por Yan Tavares e Eduardo Marques</p>
+      <h1>Escolha uma Ferramenta</h1>
+      <a href="vigenere.html" class="btn">Cifra de Vigenère</a>
+      <a href="rsa.html" class="btn">Assinatura Digital RSA</a>
+      <p>
+        Para uma documentação completa de cada ferramenta, acesse
+        <a href="https://github.com/yantavares/segcomp">este repositório</a>.
+      </p>
+    </div>
+  </body>
 </html>

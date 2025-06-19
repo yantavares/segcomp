@@ -19,6 +19,7 @@
       }
 
       .container {
+        position: relative;
         max-width: 1200px;
         margin: 0 auto;
         background: rgba(255, 255, 255, 0.95);
@@ -389,16 +390,67 @@
           transform: rotate(360deg);
         }
       }
+      .home-button {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: white;
+        border: none;
+        font-size: 1.5rem;
+        color: #333;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s ease;
+      }
+
+      .home-button:hover {
+        color: #000;
+      }
+      .authors {
+        text-align: center;
+        margin-top: 20px;
+        width: 100%;
+        justify-content: center;
+        margin-top: 20px;
+        font-size: 1em;
+        align-items: center;
+        color: #ccc;
+      }
     </style>
   </head>
   <body>
     <div class="container">
+      <button
+        class="home-button"
+        onclick="window.location.href='index.html'"
+        aria-label="Voltar ao início"
+      >
+        <!-- Left arrow svg -->
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
       <div class="header">
         <h1>🔐 Cifra de Vigenère</h1>
         <p>
           Implementação completa com análise criptográfica e ataque por
           frequência
         </p>
+        <div class="authors">
+          <p>Feito por Yan Tavares e Eduardo Marques</p>
+        </div>
       </div>
 
       <div class="tabs">
