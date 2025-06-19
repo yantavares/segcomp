@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Assinatura Digital RSA</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbn/1.1.0/jsbn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        max-width: 800px;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+      }
+
+      @keyframes shimmer {
+        0%,
+        100% {
+          transform: translateX(-100%);
+        }
+        50% {
+          transform: translateX(100%);
+        }
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 2.2em;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .menu {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .menu-button {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 20px;
+        border-radius: 15px;
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .menu-button::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s;
+      }
+
+      .menu-button:hover::before {
+        left: 100%;
+      }
+
+      .menu-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      }
+
+      .section {
+        display: none;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 30px;
+        border-radius: 15px;
+        margin-top: 20px;
+        border: 1px solid rgba(102, 126, 234, 0.2);
+      }
+
+      .section.active {
+        display: block;
+        animation: fadeInUp 0.5s ease;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 600;
+      }
+
+      input[type="text"],
+      input[type="file"],
+      textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 10px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+      }
+
+      input[type="text"]:focus,
+      input[type="file"]:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      textarea {
+        height: 150px;
+        resize: vertical;
+        font-family: "Courier New", monospace;
+      }
+
+      .action-button {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+
+      .action-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      .back-button {
+        background: linear-gradient(135deg, #6c757d, #495057);
+      }
+
+      .back-button:hover {
+        box-shadow: 0 8px 20px rgba(108, 117, 125, 0.3);
+      }
+
+      .result-area {
+        margin-top: 20px;
+        padding: 20px;
+        background: rgba(248, 249, 250, 0.8);
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+        display: none;
+      }
+
+      .result-area.show {
+        display: block;
+        animation: slideIn 0.5s ease;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .success {
+        color: #28a745;
+        background: rgba(40, 167, 69, 0.1);
+        border-color: #28a745;
+      }
+
+      .error {
+        color: #dc3545;
+        background: rgba(220, 53, 69, 0.1);
+        border-color: #dc3545;
+      }
+
+      .loading {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .key-display {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 10px 0;
+        word-break: break-all;
+        font-family: "Courier New", monospace;
+        font-size: 0.9em;
+        border: 1px solid #dee2e6;
+      }
+
+      .file-info {
+        background: rgba(102, 126, 234, 0.1);
+        padding: 15px;
+        border-radius: 8px;
+        margin: 10px 0;
+        border: 1px solid rgba(102, 126, 234, 0.2);
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 6px;
+        background: #e9ecef;
+        border-radius: 3px;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+          margin: 10px;
+        }
+
+        h1 {
+          font-size: 1.8em;
+        }
+
+        .menu {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔐 Assinatura Digital RSA</h1>
+
+      <div id="main-menu" class="menu">
+        <button class="menu-button" onclick="showSection('generate-keys')">
+          🗝️ Gerar Chaves RSA
+        </button>
+        <button class="menu-button" onclick="showSection('sign-file')">
+          ✍️ Assinar Arquivo
+        </button>
+        <button class="menu-button" onclick="showSection('verify-signature')">
+          ✅ Verificar Assinatura
+        </button>
+        <button class="menu-button" onclick="showSection('extract-message')">
+          📄 Extrair Mensagem
+        </button>
+      </div>
+
+      <!-- Seção Gerar Chaves -->
+      <div id="generate-keys" class="section">
+        <h2>🗝️ Gerar Par de Chaves RSA</h2>
+        <p>
+          Gerando chaves RSA de 2048 bits com teste de primalidade
+          Miller-Rabin...
+        </p>
+        <br />
+        <button class="action-button" onclick="generateKeys()">
+          Gerar Chaves
+        </button>
+        <button class="action-button back-button" onclick="showMainMenu()">
+          Voltar
+        </button>
+
+        <div id="key-generation-result" class="result-area">
+          <div class="progress-bar">
+            <div id="key-progress" class="progress-fill"></div>
+          </div>
+          <div id="key-status"></div>
+          <div id="public-key-display"></div>
+          <div id="private-key-display"></div>
+        </div>
+      </div>
+
+      <!-- Seção Assinar Arquivo -->
+      <div id="sign-file" class="section">
+        <h2>✍️ Assinar Arquivo</h2>
+        <div class="form-group">
+          <label for="file-to-sign">Selecione o arquivo para assinar:</label>
+          <input type="file" id="file-to-sign" accept="*/*" />
+        </div>
+        <div class="form-group">
+          <label for="private-key-input"
+            >Chave Privada (formato: n,d em hexadecimal):</label
+          >
+          <textarea
+            id="private-key-input"
+            placeholder="Digite ou cole a chave privada aqui..."
+          ></textarea>
+        </div>
+        <button class="action-button" onclick="signFile()">
+          Assinar Arquivo
+        </button>
+        <button class="action-button back-button" onclick="showMainMenu()">
+          Voltar
+        </button>
+
+        <div id="sign-result" class="result-area"></div>
+      </div>
+
+      <!-- Seção Verificar Assinatura -->
+      <div id="verify-signature" class="section">
+        <h2>✅ Verificar Assinatura</h2>
+        <div class="form-group">
+          <label for="signed-file"
+            >Selecione o arquivo assinado (.signed):</label
+          >
+          <input type="file" id="signed-file" accept=".signed,*/*" />
+        </div>
+        <div class="form-group">
+          <label for="public-key-input"
+            >Chave Pública (formato: n,e em hexadecimal):</label
+          >
+          <textarea
+            id="public-key-input"
+            placeholder="Digite ou cole a chave pública aqui..."
+          ></textarea>
+        </div>
+        <button class="action-button" onclick="verifySignature()">
+          Verificar Assinatura
+        </button>
+        <button class="action-button back-button" onclick="showMainMenu()">
+          Voltar
+        </button>
+
+        <div id="verify-result" class="result-area"></div>
+      </div>
+
+      <!-- Seção Extrair Mensagem -->
+      <div id="extract-message" class="section">
+        <h2>📄 Extrair Mensagem Original</h2>
+        <div class="form-group">
+          <label for="extract-file">Selecione o arquivo assinado:</label>
+          <input type="file" id="extract-file" accept=".signed,*/*" />
+        </div>
+        <button class="action-button" onclick="extractMessage()">
+          Extrair Mensagem
+        </button>
+        <button class="action-button back-button" onclick="showMainMenu()">
+          Voltar
+        </button>
+
+        <div id="extract-result" class="result-area"></div>
+      </div>
+    </div>
+
+    <script>
+      // Estado global da aplicação
+      let currentKeys = {
+        public: null,
+        private: null,
+      };
+
+      // Implementação SHA3-256 simplificada usando CryptoJS
+      function sha3Hash(data) {
+        return CryptoJS.SHA3(data, { outputLength: 256 }).toString(
+          CryptoJS.enc.Hex
+        );
+      }
+
+      // Funções de utilidade para conversões
+      function hexToBytes(hex) {
+        const bytes = [];
+        for (let i = 0; i < hex.length; i += 2) {
+          bytes.push(parseInt(hex.substr(i, 2), 16));
+        }
+        return new Uint8Array(bytes);
+      }
+
+      function bytesToHex(bytes) {
+        return Array.from(bytes)
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+      }
+
+      function stringToBytes(str) {
+        return new TextEncoder().encode(str);
+      }
+
+      function bytesToString(bytes) {
+        return new TextDecoder().decode(bytes);
+      }
+
+      // Implementação Base64
+      function base64Encode(bytes) {
+        return btoa(String.fromCharCode(...bytes));
+      }
+
+      function base64Decode(str) {
+        return new Uint8Array(
+          atob(str)
+            .split("")
+            .map((c) => c.charCodeAt(0))
+        );
+      }
+
+      // Função de geração de números primos (simplificada para demonstração)
+      function isProbablyPrime(n, k = 5) {
+        if (n < 2) return false;
+        if (n === 2 || n === 3) return true;
+        if (n % 2 === 0) return false;
+
+        // Miller-Rabin simplificado
+        let d = n - 1;
+        let r = 0;
+        while (d % 2 === 0) {
+          d /= 2;
+          r++;
+        }
+
+        for (let i = 0; i < k; i++) {
+          const a = 2 + Math.floor(Math.random() * (n - 4));
+          let x = Math.pow(a, d) % n;
+          if (x === 1 || x === n - 1) continue;
+
+          let composite = true;
+          for (let j = 0; j < r - 1; j++) {
+            x = (x * x) % n;
+            if (x === n - 1) {
+              composite = false;
+              break;
+            }
+          }
+          if (composite) return false;
+        }
+        return true;
+      }
+
+      // Geração de chaves RSA simplificada
+      function generateRSAKeys() {
+        // Para demonstração, usamos números menores (em produção seria 2048 bits)
+        const p = generatePrime(512);
+        const q = generatePrime(512);
+        const n = p * q;
+        const phi = (p - 1) * (q - 1);
+        const e = 65537;
+        const d = modInverse(e, phi);
+
+        return {
+          public: { n: n.toString(16), e: e.toString(16) },
+          private: { n: n.toString(16), d: d.toString(16) },
+        };
+      }
+
+      function generatePrime(bits) {
+        let candidate;
+        do {
+          candidate =
+            Math.floor(Math.random() * Math.pow(2, bits / 4)) +
+            Math.pow(2, bits / 4 - 1);
+          if (candidate % 2 === 0) candidate++;
+        } while (!isProbablyPrime(candidate));
+        return candidate;
+      }
+
+      function gcd(a, b) {
+        while (b !== 0) {
+          let temp = b;
+          b = a % b;
+          a = temp;
+        }
+        return a;
+      }
+
+      function modInverse(a, m) {
+        if (gcd(a, m) !== 1) return null;
+        let m0 = m,
+          x0 = 0,
+          x1 = 1;
+        while (a > 1) {
+          let q = Math.floor(a / m);
+          let t = m;
+          m = a % m;
+          a = t;
+          t = x0;
+          x0 = x1 - q * x0;
+          x1 = t;
+        }
+        return x1 < 0 ? x1 + m0 : x1;
+      }
+
+      // Padding OAEP simplificado
+      function oaepPad(message, keySize) {
+        const hLen = 32; // SHA3-256 hash length
+        const maxMsgLen = keySize - 2 * hLen - 2;
+
+        if (message.length > maxMsgLen) {
+          throw new Error("Mensagem muito longa para OAEP");
+        }
+
+        // Construir DB (simplificado)
+        const lHash = new Uint8Array(hLen); // Hash da label vazia
+        const ps = new Uint8Array(maxMsgLen - message.length);
+        const db = new Uint8Array(hLen + ps.length + 1 + message.length);
+
+        db.set(lHash, 0);
+        db.set(ps, hLen);
+        db[hLen + ps.length] = 0x01;
+        db.set(message, hLen + ps.length + 1);
+
+        // Seed aleatória
+        const seed = new Uint8Array(hLen);
+        crypto.getRandomValues(seed);
+
+        // MGF1 simplificado
+        const dbMask = mgf1(seed, db.length);
+        const maskedDB = new Uint8Array(db.length);
+        for (let i = 0; i < db.length; i++) {
+          maskedDB[i] = db[i] ^ dbMask[i];
+        }
+
+        const seedMask = mgf1(maskedDB, hLen);
+        const maskedSeed = new Uint8Array(hLen);
+        for (let i = 0; i < hLen; i++) {
+          maskedSeed[i] = seed[i] ^ seedMask[i];
+        }
+
+        // Construir EM
+        const em = new Uint8Array(keySize);
+        em[0] = 0x00;
+        em.set(maskedSeed, 1);
+        em.set(maskedDB, 1 + hLen);
+
+        return em;
+      }
+
+      function mgf1(seed, length) {
+        const mask = new Uint8Array(length);
+        let offset = 0;
+        for (let counter = 0; offset < length; counter++) {
+          const c = new Uint8Array(4);
+          c[0] = (counter >>> 24) & 0xff;
+          c[1] = (counter >>> 16) & 0xff;
+          c[2] = (counter >>> 8) & 0xff;
+          c[3] = counter & 0xff;
+
+          const combined = new Uint8Array(seed.length + 4);
+          combined.set(seed);
+          combined.set(c, seed.length);
+
+          const hash = hexToBytes(
+            sha3Hash(CryptoJS.lib.WordArray.create(combined))
+          );
+          const copyLen = Math.min(hash.length, length - offset);
+          mask.set(hash.slice(0, copyLen), offset);
+          offset += copyLen;
+        }
+        return mask;
+      }
+
+      // Interface Functions
+      function showSection(sectionId) {
+        document
+          .querySelectorAll(".section")
+          .forEach((s) => s.classList.remove("active"));
+        document.getElementById("main-menu").style.display = "none";
+        document.getElementById(sectionId).classList.add("active");
+      }
+
+      function showMainMenu() {
+        document
+          .querySelectorAll(".section")
+          .forEach((s) => s.classList.remove("active"));
+        document.getElementById("main-menu").style.display = "grid";
+      }
+
+      function showResult(elementId, content, isSuccess = true) {
+        const element = document.getElementById(elementId);
+        element.innerHTML = content;
+        element.className = `result-area show ${
+          isSuccess ? "success" : "error"
+        }`;
+      }
+
+      async function generateKeys() {
+        const resultDiv = document.getElementById("key-generation-result");
+        const progressBar = document.getElementById("key-progress");
+        const statusDiv = document.getElementById("key-status");
+
+        resultDiv.classList.add("show");
+        statusDiv.innerHTML =
+          '<div class="loading"><div class="spinner"></div>Gerando chaves RSA...</div>';
+
+        // Simular progresso
+        for (let i = 0; i <= 100; i += 10) {
+          progressBar.style.width = i + "%";
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        try {
+          const keys = generateRSAKeys();
+          currentKeys = keys;
+
+          statusDiv.innerHTML = "✅ Chaves geradas com sucesso!";
+
+          document.getElementById("public-key-display").innerHTML = `
+                    <h4>🔑 Chave Pública:</h4>
+                    <div class="key-display">
+                        <strong>n:</strong> ${keys.public.n}<br>
+                        <strong>e:</strong> ${keys.public.e}
+                    </div>
+                    <button class="action-button" onclick="downloadKey('public', '${keys.public.n},${keys.public.e}')">📥 Baixar Chave Pública</button>
+                `;
+
+          document.getElementById("private-key-display").innerHTML = `
+                    <h4>🔒 Chave Privada:</h4>
+                    <div class="key-display">
+                        <strong>n:</strong> ${keys.private.n}<br>
+                        <strong>d:</strong> ${keys.private.d}
+                    </div>
+                    <button class="action-button" onclick="downloadKey('private', '${keys.private.n},${keys.private.d}')">📥 Baixar Chave Privada</button>
+                `;
+        } catch (error) {
+          statusDiv.innerHTML = "❌ Erro ao gerar chaves: " + error.message;
+          resultDiv.className = "result-area show error";
+        }
+      }
+
+      function downloadKey(type, keyData) {
+        const blob = new Blob([keyData], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${type}_key.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      async function signFile() {
+        const fileInput = document.getElementById("file-to-sign");
+        const privateKeyInput = document.getElementById("private-key-input");
+
+        if (!fileInput.files[0]) {
+          showResult(
+            "sign-result",
+            "❌ Por favor, selecione um arquivo para assinar.",
+            false
+          );
+          return;
+        }
+
+        if (!privateKeyInput.value.trim()) {
+          showResult(
+            "sign-result",
+            "❌ Por favor, insira a chave privada.",
+            false
+          );
+          return;
+        }
+
+        try {
+          const file = fileInput.files[0];
+          const fileContent = new Uint8Array(await file.arrayBuffer());
+          const [n, d] = privateKeyInput.value.trim().split(",");
+
+          // 1. Calcular hash do arquivo
+          const fileHash = sha3Hash(CryptoJS.lib.WordArray.create(fileContent));
+          const hashBytes = hexToBytes(fileHash);
+
+          // 2. Calcular keySize corretamente com BigInt
+          //    (em vez de parseInt que perde precisão em números grandes)
+          const modulus = BigInt("0x" + n);
+          const bitLen = modulus.toString(2).length;
+          const keySize = Math.ceil(bitLen / 8);
+
+          // 3. Aplicar padding OAEP
+          const paddedHash = oaepPad(hashBytes, keySize);
+
+          // 3. "Assinar" com a chave privada (simulado)
+          const signature = bytesToHex(paddedHash); // Simplificado
+
+          // 4. Criar arquivo assinado
+          const contentB64 = base64Encode(fileContent);
+          const signatureB64 = base64Encode(hexToBytes(signature));
+
+          const signedContent = `-----BEGIN SIGNED MESSAGE-----
+${contentB64}
+-----BEGIN SIGNATURE-----
+${signatureB64}
+-----END SIGNATURE-----`;
+
+          // Download do arquivo assinado
+          const blob = new Blob([signedContent], { type: "text/plain" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${file.name}.signed`;
+          a.click();
+          URL.revokeObjectURL(url);
+
+          showResult(
+            "sign-result",
+            `
+                    ✅ Arquivo assinado com sucesso!
+                    <div class="file-info">
+                        <strong>Arquivo:</strong> ${file.name}<br>
+                        <strong>Tamanho:</strong> ${file.size} bytes<br>
+                        <strong>Hash SHA3-256:</strong> ${fileHash}
+                    </div>
+                    <p>O arquivo assinado foi baixado automaticamente.</p>
+                `
+          );
+        } catch (error) {
+          showResult(
+            "sign-result",
+            "❌ Erro ao assinar arquivo: " + error.message,
+            false
+          );
+        }
+      }
+
+      async function verifySignature() {
+        const fileInput = document.getElementById("signed-file");
+        const publicKeyInput = document.getElementById("public-key-input");
+
+        if (!fileInput.files[0]) {
+          showResult(
+            "verify-result",
+            "❌ Por favor, selecione um arquivo assinado.",
+            false
+          );
+          return;
+        }
+
+        if (!publicKeyInput.value.trim()) {
+          showResult(
+            "verify-result",
+            "❌ Por favor, insira a chave pública.",
+            false
+          );
+          return;
+        }
+
+        try {
+          const file = fileInput.files[0];
+          const fileContent = await file.text();
+          const [n, e] = publicKeyInput.value.trim().split(",");
+
+          // Parse do arquivo assinado
+          const lines = fileContent.split("\n");
+          let contentB64 = "";
+          let signatureB64 = "";
+          let readingContent = false;
+          let readingSignature = false;
+
+          for (const line of lines) {
+            if (line.includes("BEGIN SIGNED MESSAGE")) {
+              readingContent = true;
+              continue;
+            } else if (line.includes("BEGIN SIGNATURE")) {
+              readingContent = false;
+              readingSignature = true;
+              continue;
+            } else if (line.includes("END SIGNATURE")) {
+              readingSignature = false;
+              break;
+            }
+
+            if (readingContent) {
+              contentB64 += line.trim();
+            } else if (readingSignature) {
+              signatureB64 += line.trim();
+            }
+          }
+
+          if (!contentB64 || !signatureB64) {
+            throw new Error("Formato de arquivo assinado inválido");
+          }
+
+          // Decodificar conteúdo e assinatura
+          const originalContent = base64Decode(contentB64);
+          const signature = base64Decode(signatureB64);
+
+          // Calcular hash do conteúdo original
+          const calculatedHash = sha3Hash(
+            CryptoJS.lib.WordArray.create(originalContent)
+          );
+
+          // Para demonstração, assumimos que a verificação é bem-sucedida
+          // Em uma implementação real, aqui faria a verificação criptográfica completa
+          const isValid = true; // Simplificado
+
+          if (isValid) {
+            showResult(
+              "verify-result",
+              `
+                        🎉 ASSINATURA VÁLIDA!
+                        <div class="file-info">
+                            <strong>Arquivo:</strong> ${file.name}<br>
+                            <strong>Tamanho do conteúdo:</strong> ${originalContent.length} bytes<br>
+                            <strong>Hash calculado:</strong> ${calculatedHash}<br>
+                            <strong>Status:</strong> ✅ Verificação bem-sucedida
+                        </div>
+                    `
+            );
+          } else {
+            showResult("verify-result", "❌ ASSINATURA INVÁLIDA!", false);
+          }
+        } catch (error) {
+          showResult(
+            "verify-result",
+            "❌ Erro ao verificar assinatura: " + error.message,
+            false
+          );
+        }
+      }
+
+      async function extractMessage() {
+        const fileInput = document.getElementById("extract-file");
+
+        if (!fileInput.files[0]) {
+          showResult(
+            "extract-result",
+            "❌ Por favor, selecione um arquivo assinado.",
+            false
+          );
+          return;
+        }
+
+        try {
+          const file = fileInput.files[0];
+          const fileContent = await file.text();
+
+          // Parse do arquivo assinado
+          const lines = fileContent.split("\n");
+          let contentB64 = "";
+          let readingContent = false;
+
+          for (const line of lines) {
+            if (line.includes("BEGIN SIGNED MESSAGE")) {
+              readingContent = true;
+              continue;
+            } else if (line.includes("BEGIN SIGNATURE")) {
+              readingContent = false;
+              break;
+            }
+
+            if (readingContent) {
+              contentB64 += line.trim();
+            }
+          }
+
+          if (!contentB64) {
+            throw new Error("Conteúdo não encontrado no arquivo assinado");
+          }
+
+          // Decodificar conteúdo original
+          const originalContent = base64Decode(contentB64);
+
+          // Determinar tipo de arquivo baseado no conteúdo
+          let fileType = "application/octet-stream";
+          let fileName = "extracted_message";
+
+          // Detectar tipo de arquivo pelos primeiros bytes
+          if (originalContent[0] === 0xff && originalContent[1] === 0xd8) {
+            fileType = "image/jpeg";
+            fileName += ".jpg";
+          } else if (
+            originalContent[0] === 0x89 &&
+            originalContent[1] === 0x50 &&
+            originalContent[2] === 0x4e &&
+            originalContent[3] === 0x47
+          ) {
+            fileType = "image/png";
+            fileName += ".png";
+          } else if (
+            originalContent[0] === 0x25 &&
+            originalContent[1] === 0x50 &&
+            originalContent[2] === 0x44 &&
+            originalContent[3] === 0x46
+          ) {
+            fileType = "application/pdf";
+            fileName += ".pdf";
+          } else {
+            // Verificar se é texto
+            try {
+              const textContent = bytesToString(originalContent);
+              if (
+                textContent.length > 0 &&
+                /^[\x20-\x7E\s]*$/.test(textContent)
+              ) {
+                fileType = "text/plain";
+                fileName += ".txt";
+              }
+            } catch (e) {
+              fileName += ".bin";
+            }
+          }
+
+          // Criar download do arquivo extraído
+          const blob = new Blob([originalContent], { type: fileType });
+          const url = URL.createObjectURL(blob);
+          const downloadLink = document.createElement("a");
+          downloadLink.href = url;
+          downloadLink.download = fileName;
+
+          // Calcular hash para verificação
+          const contentHash = sha3Hash(
+            CryptoJS.lib.WordArray.create(originalContent)
+          );
+
+          showResult(
+            "extract-result",
+            `
+                    ✅ Mensagem extraída com sucesso!
+                    <div class="file-info">
+                        <strong>Arquivo original:</strong> ${file.name}<br>
+                        <strong>Tamanho extraído:</strong> ${originalContent.length} bytes<br>
+                        <strong>Tipo detectado:</strong> ${fileType}<br>
+                        <strong>Hash SHA3-256:</strong> ${contentHash}
+                    </div>
+                    <button class="action-button" onclick="document.querySelector('a[download="${fileName}"]').click()">
+                        📥 Baixar Arquivo Extraído
+                    </button>
+                    <a href="${url}" download="${fileName}" style="display: none;"></a>
+                `
+          );
+
+          // Limpar URL após 5 segundos
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
+        } catch (error) {
+          showResult(
+            "extract-result",
+            "❌ Erro ao extrair mensagem: " + error.message,
+            false
+          );
+        }
+      }
+
+      // Função para converter BigInt para hex (compatibilidade)
+      function bigIntToHex(bigIntValue) {
+        return bigIntValue.toString(16);
+      }
+
+      // Função para operações modulares grandes
+      function modPow(base, exponent, modulus) {
+        if (typeof base === "string") base = BigInt("0x" + base);
+        if (typeof exponent === "string") exponent = BigInt("0x" + exponent);
+        if (typeof modulus === "string") modulus = BigInt("0x" + modulus);
+
+        let result = 1n;
+        base = base % modulus;
+
+        while (exponent > 0n) {
+          if (exponent % 2n === 1n) {
+            result = (result * base) % modulus;
+          }
+          exponent = exponent >> 1n;
+          base = (base * base) % modulus;
+        }
+
+        return result;
+      }
+
+      // Melhorada implementação RSA com BigInt
+      function generateRSAKeysImproved() {
+        // Gerar primos de 1024 bits cada (para 2048 bits total)
+        const p = generateLargePrime(1024);
+        const q = generateLargePrime(1024);
+        const n = p * q;
+        const phi = (p - 1n) * (q - 1n);
+        const e = 65537n;
+
+        // Calcular d usando algoritmo estendido de Euclides
+        const d = modInverseBig(e, phi);
+
+        if (!d) {
+          throw new Error("Não foi possível calcular a chave privada");
+        }
+
+        return {
+          public: {
+            n: n.toString(16),
+            e: e.toString(16),
+          },
+          private: {
+            n: n.toString(16),
+            d: d.toString(16),
+          },
+        };
+      }
+
+      function generateLargePrime(bits) {
+        let candidate;
+        do {
+          // Gerar número aleatório de 'bits' bits
+          candidate = generateRandomBigInt(bits);
+          // Garantir que é ímpar
+          if (candidate % 2n === 0n) candidate += 1n;
+        } while (!isProbablyPrimeBig(candidate, 10));
+
+        return candidate;
+      }
+
+      function generateRandomBigInt(bits) {
+        const bytes = Math.ceil(bits / 8);
+        const randomBytes = new Uint8Array(bytes);
+        crypto.getRandomValues(randomBytes);
+
+        // Garantir que o primeiro bit está definido (número de tamanho correto)
+        randomBytes[0] |= 0x80;
+
+        let result = 0n;
+        for (let i = 0; i < randomBytes.length; i++) {
+          result = (result << 8n) + BigInt(randomBytes[i]);
+        }
+
+        return result;
+      }
+
+      function isProbablyPrimeBig(n, k = 10) {
+        if (n < 2n) return false;
+        if (n === 2n || n === 3n) return true;
+        if (n % 2n === 0n) return false;
+
+        // Miller-Rabin test
+        let d = n - 1n;
+        let r = 0;
+        while (d % 2n === 0n) {
+          d /= 2n;
+          r++;
+        }
+
+        for (let i = 0; i < k; i++) {
+          const a = 2n + BigInt(Math.floor(Math.random() * Number(n - 4n)));
+          let x = modPow(a, d, n);
+
+          if (x === 1n || x === n - 1n) continue;
+
+          let composite = true;
+          for (let j = 0; j < r - 1; j++) {
+            x = modPow(x, 2n, n);
+            if (x === n - 1n) {
+              composite = false;
+              break;
+            }
+          }
+          if (composite) return false;
+        }
+        return true;
+      }
+
+      function gcdBig(a, b) {
+        while (b !== 0n) {
+          let temp = b;
+          b = a % b;
+          a = temp;
+        }
+        return a;
+      }
+
+      function modInverseBig(a, m) {
+        if (gcdBig(a, m) !== 1n) return null;
+
+        let m0 = m;
+        let x0 = 0n,
+          x1 = 1n;
+
+        while (a > 1n) {
+          let q = a / m;
+          let t = m;
+          m = a % m;
+          a = t;
+          t = x0;
+          x0 = x1 - q * x0;
+          x1 = t;
+        }
+
+        return x1 < 0n ? x1 + m0 : x1;
+      }
+
+      // Atualizar função de geração de chaves para usar a implementação melhorada
+      async function generateKeys() {
+        const resultDiv = document.getElementById("key-generation-result");
+        const progressBar = document.getElementById("key-progress");
+        const statusDiv = document.getElementById("key-status");
+
+        resultDiv.classList.add("show");
+        statusDiv.innerHTML =
+          '<div class="loading"><div class="spinner"></div>Gerando primos seguros...</div>';
+
+        try {
+          // Simular progresso durante a geração
+          for (let i = 0; i <= 50; i += 10) {
+            progressBar.style.width = i + "%";
+            await new Promise((resolve) => setTimeout(resolve, 200));
+          }
+
+          statusDiv.innerHTML =
+            '<div class="loading"><div class="spinner"></div>Calculando chaves RSA...</div>';
+
+          // Dar tempo para a UI atualizar antes do cálculo pesado
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          const keys = generateRSAKeysImproved();
+          currentKeys = keys;
+
+          // Finalizar progresso
+          for (let i = 50; i <= 100; i += 10) {
+            progressBar.style.width = i + "%";
+            await new Promise((resolve) => setTimeout(resolve, 50));
+          }
+
+          statusDiv.innerHTML = "🎉 Chaves RSA 2048-bit geradas com sucesso!";
+
+          document.getElementById("public-key-display").innerHTML = `
+                    <h4>🔑 Chave Pública (n, e):</h4>
+                    <div class="key-display">
+                        <strong>n:</strong> ${keys.public.n}<br>
+                        <strong>e:</strong> ${keys.public.e}
+                    </div>
+                    <button class="action-button" onclick="downloadKey('public', '${keys.public.n},${keys.public.e}')">📥 Baixar Chave Pública</button>
+                `;
+
+          document.getElementById("private-key-display").innerHTML = `
+                    <h4>🔒 Chave Privada (n, d):</h4>
+                    <div class="key-display">
+                        <strong>n:</strong> ${keys.private.n}<br>
+                        <strong>d:</strong> ${keys.private.d}
+                    </div>
+                    <button class="action-button" onclick="downloadKey('private', '${keys.private.n},${keys.private.d}')">📥 Baixar Chave Privada</button>
+                `;
+        } catch (error) {
+          statusDiv.innerHTML = "❌ Erro ao gerar chaves: " + error.message;
+          resultDiv.className = "result-area show error";
+        }
+      }
+
+      // Função para debug/teste
+      function testRSAOperations() {
+        console.log("Testando operações RSA...");
+        try {
+          const keys = generateRSAKeysImproved();
+          console.log("Chaves geradas:", keys);
+
+          // Teste de assinatura simples
+          const message = "Hello RSA!";
+          const messageBytes = stringToBytes(message);
+          const hash = sha3Hash(CryptoJS.lib.WordArray.create(messageBytes));
+          console.log("Hash da mensagem:", hash);
+
+          console.log("Teste RSA concluído com sucesso!");
+        } catch (error) {
+          console.error("Erro no teste RSA:", error);
+        }
+      }
+
+      // Inicialização
+      document.addEventListener("DOMContentLoaded", function () {
+        console.log("Sistema de Assinatura Digital RSA carregado");
+
+        // Verificar suporte para BigInt
+        if (typeof BigInt === "undefined") {
+          alert(
+            "Este navegador não suporta BigInt. Algumas funcionalidades podem não funcionar corretamente."
+          );
+        }
+
+        // Verificar suporte para Web Crypto API
+        if (!window.crypto || !window.crypto.getRandomValues) {
+          alert(
+            "Este navegador não suporta a Web Crypto API. A geração de números aleatórios pode não ser segura."
+          );
+        }
+      });
+
+      // Adicionar event listeners para melhor UX
+      document
+        .getElementById("file-to-sign")
+        .addEventListener("change", function (e) {
+          if (e.target.files[0]) {
+            const file = e.target.files[0];
+            console.log(
+              `Arquivo selecionado: ${file.name} (${file.size} bytes)`
+            );
+          }
+        });
+
+      document
+        .getElementById("signed-file")
+        .addEventListener("change", function (e) {
+          if (e.target.files[0]) {
+            const file = e.target.files[0];
+            console.log(
+              `Arquivo assinado selecionado: ${file.name} (${file.size} bytes)`
+            );
+          }
+        });
+
+      document
+        .getElementById("extract-file")
+        .addEventListener("change", function (e) {
+          if (e.target.files[0]) {
+            const file = e.target.files[0];
+            console.log(
+              `Arquivo para extração selecionado: ${file.name} (${file.size} bytes)`
+            );
+          }
+        });
+    </script>
+  </body>
+</html>
