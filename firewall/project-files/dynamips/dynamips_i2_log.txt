@@ -1,0 +1,19 @@
+Jul 06 20:42:36.453 HYPERVISOR: Release 0.2.17-x86/Windows (tag 2017072410)
+Jul 06 20:42:36.454 HYPERVISOR: Started on IP = localhost, TCP port = 49850.
+Jul 06 20:42:36.929 HYPERVISOR: exec_cmd: hypervisor version 
+Jul 06 20:42:36.929 HYPERVISOR: exec_cmd: hypervisor working_dir C:\Users\yantd\GNS3\projects\segcomp\project-files\dynamips 
+Jul 06 20:42:36.929 GENERAL: working_dir=C:\Users\yantd\GNS3\projects\segcomp\project-files\dynamips
+Jul 06 20:42:36.930 HYPERVISOR: exec_cmd: ethsw create Switch2 
+Jul 06 20:42:38.266 HYPERVISOR: exec_cmd: nio create_udp udp-f70ea6e5-f97a-4669-b253-9641deb0d989 10003 127.0.0.1 10002 
+Jul 06 20:42:38.280 HYPERVISOR: exec_cmd: ethsw add_nio Switch2 udp-f70ea6e5-f97a-4669-b253-9641deb0d989 
+Jul 06 20:42:38.308 HYPERVISOR: exec_cmd: ethsw set_access_port Switch2 udp-f70ea6e5-f97a-4669-b253-9641deb0d989 1 
+Jul 06 20:42:38.339 HYPERVISOR: exec_cmd: nio create_udp udp-86272aae-84c8-48fc-9e32-aa4f5150e92b 10004 127.0.0.1 10005 
+Jul 06 20:42:38.339 HYPERVISOR: exec_cmd: ethsw add_nio Switch2 udp-86272aae-84c8-48fc-9e32-aa4f5150e92b 
+Jul 06 20:42:38.368 HYPERVISOR: exec_cmd: ethsw set_access_port Switch2 udp-86272aae-84c8-48fc-9e32-aa4f5150e92b 1 
+Jul 06 21:51:00.463 HYPERVISOR: exec_cmd: ethsw remove_nio Switch2 udp-86272aae-84c8-48fc-9e32-aa4f5150e92b 
+Jul 06 21:51:00.495 HYPERVISOR: exec_cmd: nio delete udp-86272aae-84c8-48fc-9e32-aa4f5150e92b 
+Jul 06 21:51:51.104 HYPERVISOR: exec_cmd: nio create_udp udp-1ef13dae-410f-49d7-83c1-702cef494e2e 10016 127.0.0.1 10017 
+Jul 06 21:51:51.110 HYPERVISOR: exec_cmd: ethsw add_nio Switch2 udp-1ef13dae-410f-49d7-83c1-702cef494e2e 
+Jul 06 21:51:51.118 HYPERVISOR: exec_cmd: ethsw set_access_port Switch2 udp-1ef13dae-410f-49d7-83c1-702cef494e2e 1 
+Jul 06 22:09:59.390 HYPERVISOR: exec_cmd: nio bind_filter udp-1ef13dae-410f-49d7-83c1-702cef494e2e 2 capture 
+Jul 06 22:09:59.390 HYPERVISOR: exec_cmd: nio setup_filter udp-1ef13dae-410f-49d7-83c1-702cef494e2e 2 en10mb C:\Users\yantd\GNS3\projects\segcomp\project-files\captures\Switch2_Ethernet1_to_Public_Ethernet0.pcap 

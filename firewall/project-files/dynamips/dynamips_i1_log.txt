@@ -1,0 +1,20 @@
+Jul 06 20:42:36.057 HYPERVISOR: Release 0.2.17-x86/Windows (tag 2017072410)
+Jul 06 20:42:36.058 HYPERVISOR: Started on IP = localhost, TCP port = 49847.
+Jul 06 20:42:36.356 HYPERVISOR: exec_cmd: hypervisor version 
+Jul 06 20:42:36.356 HYPERVISOR: exec_cmd: hypervisor working_dir C:\Users\yantd\GNS3\projects\segcomp\project-files\dynamips 
+Jul 06 20:42:36.360 GENERAL: working_dir=C:\Users\yantd\GNS3\projects\segcomp\project-files\dynamips
+Jul 06 20:42:36.360 HYPERVISOR: exec_cmd: ethsw create Switch1 
+Jul 06 20:42:38.107 HYPERVISOR: exec_cmd: nio create_udp udp-0196b7e0-e341-4bfc-943e-5947a2c2a6c1 10000 127.0.0.1 10001 
+Jul 06 20:42:38.108 HYPERVISOR: exec_cmd: ethsw add_nio Switch1 udp-0196b7e0-e341-4bfc-943e-5947a2c2a6c1 
+Jul 06 20:42:38.130 HYPERVISOR: exec_cmd: ethsw set_access_port Switch1 udp-0196b7e0-e341-4bfc-943e-5947a2c2a6c1 1 
+Jul 06 20:42:38.852 HYPERVISOR: exec_cmd: nio create_udp udp-2f31218a-7c49-459f-a44a-84c644c3ffbc 10014 127.0.0.1 10015 
+Jul 06 20:42:38.852 HYPERVISOR: exec_cmd: ethsw add_nio Switch1 udp-2f31218a-7c49-459f-a44a-84c644c3ffbc 
+Jul 06 20:42:38.877 HYPERVISOR: exec_cmd: ethsw set_access_port Switch1 udp-2f31218a-7c49-459f-a44a-84c644c3ffbc 1 
+Jul 06 21:49:54.967 HYPERVISOR: exec_cmd: ethsw remove_nio Switch1 udp-2f31218a-7c49-459f-a44a-84c644c3ffbc 
+Jul 06 21:49:54.992 HYPERVISOR: exec_cmd: nio delete udp-2f31218a-7c49-459f-a44a-84c644c3ffbc 
+Jul 06 21:51:33.143 HYPERVISOR: exec_cmd: nio create_udp udp-9d43c5d8-de88-4491-9cfd-3ce1ea4eb892 10004 127.0.0.1 10005 
+Jul 06 21:51:33.159 HYPERVISOR: exec_cmd: ethsw add_nio Switch1 udp-9d43c5d8-de88-4491-9cfd-3ce1ea4eb892 
+Jul 06 21:51:33.191 HYPERVISOR: exec_cmd: ethsw set_access_port Switch1 udp-9d43c5d8-de88-4491-9cfd-3ce1ea4eb892 1 
+Jul 06 22:09:45.962 HYPERVISOR: exec_cmd: nio bind_filter udp-0196b7e0-e341-4bfc-943e-5947a2c2a6c1 2 capture 
+Jul 06 22:09:45.962 HYPERVISOR: exec_cmd: nio setup_filter udp-0196b7e0-e341-4bfc-943e-5947a2c2a6c1 2 en10mb C:\Users\yantd\GNS3\projects\segcomp\project-files\captures\Switch1_Ethernet1_to_Router1_Ethernet1.pcap 
+Jul 06 22:09:55.122 HYPERVISOR: exec_cmd: nio unbind_filter udp-0196b7e0-e341-4bfc-943e-5947a2c2a6c1 2 

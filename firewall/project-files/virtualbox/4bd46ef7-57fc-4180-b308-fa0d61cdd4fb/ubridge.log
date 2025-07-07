@@ -1,0 +1,21 @@
+uBridge version 0.9.16 running with Npcap version 1.78, based on libpcap version 1.10.4
+Hypervisor TCP control server started (IP localhost port 51561).
+UDP tunnel connecting from local port 10029 to IPv4 addresss 127.0.0.1 on port 10028
+UDP tunnel connecting from local port 10001 to IPv4 addresss 127.0.0.1 on port 10000
+Source NIO listener thread for VBOX-4bd46ef7-57fc-4180-b308-fa0d61cdd4fb-1 has started
+Destination NIO listener thread for VBOX-4bd46ef7-57fc-4180-b308-fa0d61cdd4fb-1 has started
+UDP tunnel connecting from local port 10035 to IPv4 addresss 127.0.0.1 on port 10034
+UDP tunnel connecting from local port 10002 to IPv4 addresss 127.0.0.1 on port 10003
+Source NIO listener thread for VBOX-4bd46ef7-57fc-4180-b308-fa0d61cdd4fb-2 has started
+Destination NIO listener thread for VBOX-4bd46ef7-57fc-4180-b308-fa0d61cdd4fb-2 has started
+UDP tunnel connecting from local port 10041 to IPv4 addresss 127.0.0.1 on port 10040
+UDP tunnel connecting from local port 10006 to IPv4 addresss 127.0.0.1 on port 10007
+Source NIO listener thread for VBOX-4bd46ef7-57fc-4180-b308-fa0d61cdd4fb-3 has started
+Destination NIO listener thread for VBOX-4bd46ef7-57fc-4180-b308-fa0d61cdd4fb-3 has started
+UDP tunnel connecting from local port 10043 to IPv4 addresss 127.0.0.1 on port 10042
+UDP tunnel connecting from local port 10008 to IPv4 addresss 127.0.0.1 on port 10009
+Source NIO listener thread for VBOX-4bd46ef7-57fc-4180-b308-fa0d61cdd4fb-4 has started
+Destination NIO listener thread for VBOX-4bd46ef7-57fc-4180-b308-fa0d61cdd4fb-4 has started
+Capturing to file 'C:\Users\yantd\GNS3\projects\segcomp\project-files\captures\Router1_Ethernet4_to_Router2_Ethernet4.pcap'
+Capturing to file 'C:\Users\yantd\GNS3\projects\segcomp\project-files\captures\Router1_Ethernet4_to_Router2_Ethernet4.pcap'
+Capturing to file 'C:\Users\yantd\GNS3\projects\segcomp\project-files\captures\Router1_Ethernet4_to_Router2_Ethernet4.pcap'
